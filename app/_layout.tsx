@@ -1,105 +1,68 @@
 import "react-native-gesture-handler";
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Provider } from 'react-redux';
-import { Stack, useRouter, SplashScreen } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, ActivityIndicator, Platform, StatusBar } from "react-native";
+import { Stack, useRouter, useSegments, SplashScreen } from 'expo-router';
+import { View, Platform, StatusBar } from "react-native";
 import * as NavigationBar from "expo-navigation-bar";
 
 // Redux Store & Actions
 import { store } from '../src/store/store';
-import { useAppDispatch, useAppSelector } from '../src/store/hooks';
-import { setUserOnLoad, setLoading } from '../src/store/authSlice';
+import { useAppSelector } from '../src/store/hooks';
 
-// Context Providers
-import ThemeProvider, { useTheme } from '../src/context/ThemeContext'; // ✅ FIX: Corrected import
+// Context Providers (AuthProvider is now removed)
+import ThemeProvider, { useTheme } from '../src/context/ThemeContext';
 import { LanguageProvider } from '../src/context/LanguageContext';
 import { RoleProvider } from '../src/context/RoleContext';
-import { AuthProvider } from "@/src/context/AuthContext";
 
-// Splash screen ko tab tak roke rakhein jab tak app taiyar na ho jaye
+// Keep the splash screen visible while the app is loading
 SplashScreen.preventAutoHideAsync();
 
-function RootNavigation() {
-  const dispatch = useAppDispatch();
-  const router = useRouter();
-  const { theme } = useTheme(); // useTheme ko yahan call karein
+function RootNavigationLayout() {
+  // Data ab sirf Redux se aa raha hai
   const { user, isLoading } = useAppSelector((state) => state.auth);
+  const segments = useSegments();
+  const router = useRouter();
+  const { theme } = useTheme();
 
-  // State to check if user has completed the welcome/onboarding screen
-  const [hasOnboarded, setHasOnboarded] = useState<boolean | null>(null);
-
-  // Yeh effect app shuru hone par sirf ek baar chalta hai
+  // Yeh hook navigation ko control karta hai
   useEffect(() => {
-    async function prepareApp() {
-      try {
-        // User data aur onboarding status ko ek saath load karein
-        const storedUser = await AsyncStorage.getItem('user');
-        const storedOnboardingStatus = await AsyncStorage.getItem('hasOnboarded');
-
-        if (storedUser) {
-          dispatch(setUserOnLoad(JSON.parse(storedUser)));
-        }
-
-        setHasOnboarded(storedOnboardingStatus === 'true');
-
-      } catch (e) {
-        console.warn('Storage se initial app data load karne mein samasya:', e);
-      } finally {
-        // Redux ko batayein ki initial loading poori ho gayi hai
-        dispatch(setLoading(false));
-      }
-    }
-
-    prepareApp();
-  }, [dispatch]);
-
-  // Yeh effect navigation ko handle karta hai jab bhi state badalti hai
-  useEffect(() => {
-    // Jab tak loading poori na ho aur onboarding status pata na chale, navigate na karein
-    if (isLoading || hasOnboarded === null) {
+    // Agar Redux initial user data load kar raha hai, to kuch na karein
+    if (isLoading) {
       return;
     }
 
-    if (!hasOnboarded) {
-      // Agar user ne welcome screen nahi dekhi hai, to use wahan bhejein
-      router.replace('/(auth)/welcome');
-    } else if (user?._id) {
-      // Agar user login hai, to use app ke home screen par bhejein
+    const inAuthGroup = segments[0] === '(auth)';
+
+    // 1. Agar user login hai aur woh abhi bhi login/register screen par hai
+    if (user?.token && inAuthGroup) {
       router.replace('/(tabs)/home');
-    } else {
-      // Agar user login nahi hai par welcome screen dekh chuka hai, to use login par bhejein
+    } 
+    // 2. Agar user login nahi hai aur woh app ke andar ki screen par hai
+    else if (!user?.token && !inAuthGroup) {
       router.replace('/(auth)/login');
     }
+  }, [user, segments, isLoading, router]);
 
-  }, [isLoading, user, hasOnboarded, router]);
-
-  // Yeh function layout taiyar hone par splash screen ko hide karta hai
+  // Jab layout taiyar ho jaye to splash screen ko hide karein
   const onLayoutRootView = useCallback(async () => {
-    if (!isLoading && hasOnboarded !== null) {
+    if (!isLoading) {
       await SplashScreen.hideAsync();
     }
-  }, [isLoading, hasOnboarded]);
+  }, [isLoading]);
 
-  // Android ke liye Navigation Bar aur app ke liye Status Bar ka style set karein
+  // Android aur iOS ke liye bar styling
   useEffect(() => {
     if (Platform.OS === "android") {
       NavigationBar.setBackgroundColorAsync(theme.colors.background);
-      NavigationBar.setButtonStyleAsync(theme.mode ? "light" : "dark");
+      NavigationBar.setButtonStyleAsync(theme.mode === 'dark' ? "light" : "dark");
     }
-    StatusBar.setBarStyle(theme.mode ? "light-content" : "dark-content");
+    StatusBar.setBarStyle(theme.mode === 'dark' ? "light-content" : "dark-content");
   }, [theme]);
 
-  // Jab tak app poori tarah se taiyar na ho, kuch bhi render na karein.
+  // Jab tak Redux pehli baar user ki sthiti jaanch raha hai, kuch bhi na dikhayein.
   // Is dauran native splash screen dikhti rahegi.
-  if (isLoading || hasOnboarded === null) {
-    // FIX: Blank screen se bachne ke liye ek loading indicator dikhayein.
-    // Yeh user ko batata hai ki app load ho raha hai.
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
-    );
+  if (isLoading) {
+    return null;
   }
 
   return (
@@ -107,23 +70,21 @@ function RootNavigation() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         <Stack.Screen name="+not-found" />
       </Stack>
     </View>
   );
 }
 
-// Yeh main component hai jo poore app ko sabhi zaroori providers ke saath wrap karta hai
+// Yeh main component hai jo poore app ko sahi providers ke saath wrap karta hai
 export default function RootLayout() {
   return (
     <Provider store={store}>
       <ThemeProvider>
         <LanguageProvider>
           <RoleProvider>
-            <AuthProvider>
-              <RootNavigation />
-            </AuthProvider>
+            {/* ✨ AuthProvider yahan se hata diya gaya hai */}
+            <RootNavigationLayout />
           </RoleProvider>
         </LanguageProvider>
       </ThemeProvider>

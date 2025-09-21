@@ -1,8 +1,10 @@
 // src/store/businessService.ts
 import axios from 'axios';
 import { BusinessProfile } from './types';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-const API_URL = 'http://10.152.238.74:5001/api/businesses';
+// const API_URL = 'http://10.152.238.74:5001/api/businesses';
+const API_URL = `${API_BASE_URL}/businesses`;
 
 // Create a new business profile
 const create = async (businessData: Partial<BusinessProfile>, token: string) => {

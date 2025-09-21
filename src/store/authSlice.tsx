@@ -17,7 +17,7 @@ const initialState: AuthState = {
     user: null,
     isError: false,
     isSuccess: false,
-    isLoading: true, // Start as true to handle app loading state
+    isLoading: false, // Start as true to handle app loading state
     message: '',
 };
 

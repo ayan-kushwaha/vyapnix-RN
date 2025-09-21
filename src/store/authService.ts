@@ -3,8 +3,10 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RegisterUserData, LoginUserData, UpdateUserData } from './types';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-const API_URL = 'http://10.152.238.74:5001/api/users';
+// const API_URL = 'http://10.152.238.74:5001/api/users';
+const API_URL = `${API_BASE_URL}/users`;
 
 // Register user
 const register = async (userData: RegisterUserData) => {
