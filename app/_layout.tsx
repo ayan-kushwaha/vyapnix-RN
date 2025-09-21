@@ -15,6 +15,7 @@ import { setUserOnLoad, setLoading } from '../src/store/authSlice';
 import ThemeProvider, { useTheme } from '../src/context/ThemeContext'; // ✅ FIX: Corrected import
 import { LanguageProvider } from '../src/context/LanguageContext';
 import { RoleProvider } from '../src/context/RoleContext';
+import { AuthProvider } from "@/src/context/AuthContext";
 
 // Splash screen ko tab tak roke rakhein jab tak app taiyar na ho jaye
 SplashScreen.preventAutoHideAsync();
@@ -24,7 +25,7 @@ function RootNavigation() {
   const router = useRouter();
   const { theme } = useTheme(); // useTheme ko yahan call karein
   const { user, isLoading } = useAppSelector((state) => state.auth);
-  
+
   // State to check if user has completed the welcome/onboarding screen
   const [hasOnboarded, setHasOnboarded] = useState<boolean | null>(null);
 
@@ -39,7 +40,7 @@ function RootNavigation() {
         if (storedUser) {
           dispatch(setUserOnLoad(JSON.parse(storedUser)));
         }
-        
+
         setHasOnboarded(storedOnboardingStatus === 'true');
 
       } catch (e) {
@@ -92,7 +93,13 @@ function RootNavigation() {
   // Jab tak app poori tarah se taiyar na ho, kuch bhi render na karein.
   // Is dauran native splash screen dikhti rahegi.
   if (isLoading || hasOnboarded === null) {
-    return null; // Return null to keep splash screen visible
+    // FIX: Blank screen se bachne ke liye ek loading indicator dikhayein.
+    // Yeh user ko batata hai ki app load ho raha hai.
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
   }
 
   return (
@@ -114,11 +121,12 @@ export default function RootLayout() {
       <ThemeProvider>
         <LanguageProvider>
           <RoleProvider>
-            <RootNavigation />
+            <AuthProvider>
+              <RootNavigation />
+            </AuthProvider>
           </RoleProvider>
         </LanguageProvider>
       </ThemeProvider>
     </Provider>
   );
 }
-

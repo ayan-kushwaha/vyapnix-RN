@@ -109,9 +109,9 @@ const ContactCard: FC<{ item: Contact; onPress: () => void }> = ({ item, onPress
           {item.name}
         </Text>
         {/* <ActivitySnippet /> */}
-          <View style={[tw`py-0.5 px-2   rounded-full mt-1.5`, roleTag.bg]}>
-            <Text style={[tw`text-xs font-bold capitalize`, roleTag.text]}>{item.role}</Text>
-          </View>
+        <View style={[tw`py-0.5 px-2   rounded-full mt-1.5`, roleTag.bg]}>
+          <Text style={[tw`text-xs font-bold capitalize`, roleTag.text]}>{item.role}</Text>
+        </View>
       </View>
 
       {/* Right side: time + role */}
@@ -173,3 +173,4 @@ export default function ContactsListScreen({
     />
   );
 }
+
