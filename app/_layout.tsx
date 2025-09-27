@@ -88,6 +88,8 @@ function RootNavigationLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(auth)" />
+        <Stack.Screen name="catalog/add-template" options={{ presentation: 'modal' }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
     </View>

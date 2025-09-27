@@ -81,12 +81,11 @@ export interface UpdateUserData {
   password?: string; // Optional: for password changes
 }
 
-
 // Tax structure
 export interface TaxRate {
   _id: string;
-  name: string;        // e.g., "GST 18%"
-  rate: number;        // e.g., 18
+  name: string;      // e.g., "GST 18%"
+  rate: number;      // e.g., 18
   description?: string;
   isActive: boolean;
 }
@@ -110,26 +109,30 @@ export interface ItemTemplate {
 export interface CatalogItem {
   _id: string;
   business: string;
-  template: string;
+  template: string | ItemTemplate; // API se ID string ya poora object aa sakta hai
   name: string;
   description?: string;
   images?: string[];
   category?: string;
   tags?: string[];
   isActive: boolean;
-  // Pricing
-  pricing?: {
-    mrp?: number;
-    sellingPrice: number;
-    discountNote?: string;
-  };
+
+  // ✅ FIX: `pricingOptions` ab sabhi cases (e-commerce, subscription) ke liye kaam karega.
+  // Yeh aapke Postman example se bilkul match karta hai.
+  pricingOptions?: {
+    label: string;
+    basePrice: number;
+    // 'cycle' batata hai ki yeh one-time purchase hai ya recurring subscription.
+    cycle: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'one-time';
+    // Yeh do fields backend se calculate hokar aate hain.
+    taxAmount: number;
+    totalPrice: number;
+  }[];
+
+  // Puraani `pricing` property ko hata diya gaya hai taaki confusion na ho.
+  // `subscriptionPlans` ki bhi zaroorat nahi hai kyunki `pricingOptions` hi sab handle kar raha hai.
 
   tax?: TaxRate | null;
-
-  subscriptionPlans?: {
-    cycle: 'daily' | 'weekly' | 'monthly' | 'yearly';
-    price: number;
-  }[];
   stock?: number;
   durationInMinutes?: number;
   dynamicFields: {
@@ -142,5 +145,6 @@ export interface CatalogItem {
   shares: number;
   rating: number;
   numReviews: number;
-  reviews: any[]; // Aap isey baad mein Review type se replace kar sakte hain
+  reviews: any[];
 }
+

@@ -51,7 +51,7 @@ export default function BottomNav() {
     <View style={tw`absolute bottom-0 left-0 right-0 items-center`}>
       <View
         style={[
-          tw`flex-row w-full h-20 items-center justify-around`,
+          tw`flex-row w-full h-16 items-center justify-around`,
           { backgroundColor: theme.colors.tabBar, borderTopWidth: 1, borderTopColor: theme.colors.border },
         ]}
       >

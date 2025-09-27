@@ -60,10 +60,7 @@ export const deleteItem = createAsyncThunk('catalog/deleteItem', async (itemId: 
     return itemId; // Sirf ID wapas bhejein
 });
 
-export const updateTemplate = createAsyncThunk('catalog/updateTemplate', async ({ templateId, templateData }: { templateId: string; templateData: Partial<ItemTemplate> }, thunkAPI) => {
-    const token = (thunkAPI.getState() as RootState).auth.user!.token;
-    return await catalogService.updateTemplate(templateId, templateData, token);
-});
+
 
 export const deleteTemplate = createAsyncThunk('catalog/deleteTemplate', async (templateId: string, thunkAPI) => {
     const token = (thunkAPI.getState() as RootState).auth.user!.token;
@@ -71,6 +68,18 @@ export const deleteTemplate = createAsyncThunk('catalog/deleteTemplate', async (
     return templateId; // Sirf ID wapas bhejein
 });
 
+// ✅ NAYA THUNK: Template ko update karne ke liye
+export const updateTemplate = createAsyncThunk('catalog/updateTemplate', async ({ templateId, templateData }: { templateId: string; templateData: Partial<ItemTemplate> }, thunkAPI) => {
+    const token = (thunkAPI.getState() as RootState).auth.user!.token;
+    return await catalogService.updateTemplate(templateId, templateData, token);
+});
+
+// ✅ NAYA THUNK: Item par event (like) track karne ke liye
+export const trackItemEvent = createAsyncThunk('catalog/trackEvent', async ({ itemId, eventType }: { itemId: string; eventType: 'like' }, thunkAPI) => {
+    // Note: 'view' jaise event ke liye humein authentication ki zaroorat nahi
+    await catalogService.trackEvent(itemId, eventType);
+    return { itemId, eventType }; // UI update karne ke liye data wapas bhejein
+});
 
 // ✨ NAYA THUNK: Template with items
 export const getTemplateWithItems = createAsyncThunk<
@@ -171,10 +180,21 @@ const catalogSlice = createSlice({
                     state.templates[index] = action.payload;
                 }
             })
-        .addCase(deleteTemplate.fulfilled, (state, action) => {
-            state.templates = state.templates.filter(t => t._id !== action.payload);
-        });
-},
+            .addCase(deleteTemplate.fulfilled, (state, action) => {
+                // action.payload woh 'templateId' hai jo humne thunk se return ki thi
+                state.templates = state.templates.filter(template => template._id !== action.payload);
+            })
+            // ... getMyItems, createItem, updateItem, deleteItem ke cases waise hi rahenge ...
+            // ✅ TRACK EVENT ke liye naye cases (Optimistic Update)
+            .addCase(trackItemEvent.fulfilled, (state, action) => {
+                const { itemId, eventType } = action.payload;
+                const itemIndex = state.items.findIndex(item => item._id === itemId);
+                if (itemIndex !== -1 && eventType === 'like') {
+                    // Hum maan lete hain ki like ho gaya aur UI turant update kar dete hain
+                    state.items[itemIndex].likes += 1;
+                }
+            });
+    },
 });
 
 export const { reset } = catalogSlice.actions;

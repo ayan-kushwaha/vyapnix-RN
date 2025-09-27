@@ -1,9 +1,9 @@
-// srccomponents/upload/uploader
+// src/components/upload/uploader
 import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, ImageSourcePropType } from 'react-native';
 import { Camera } from 'lucide-react-native';
 import tw from 'twrnc';
-import * as ImagePicker from 'expo-image-picker'; 
+import * as ImagePicker from 'expo-image-picker';
 import * as Progress from 'react-native-progress';
 import { uploadImageToCloudinary } from '@/src/utils/cloudinary';
 
@@ -57,13 +57,13 @@ export const UploadFile: React.FC<Props> = ({ avatarUrl, onUploadComplete }) => 
             setProgress(0);
         }
     };
-    
+
     // ✅ DEFAULT IMAGE FIX: Ab yeh local 'require' aur network 'uri' dono ko handle karega.
     const imageSource: ImageSourcePropType = localUri
         ? { uri: localUri }
         : avatarUrl
-        ? { uri: avatarUrl }
-        : require('../../../assets/default-avatar.png'); // Aapka local default avatar
+            ? { uri: avatarUrl }
+            : require('../../../assets/default-avatar.png'); // Aapka local default avatar
 
     return (
         <View style={tw`items-center my-4`}>
@@ -75,9 +75,9 @@ export const UploadFile: React.FC<Props> = ({ avatarUrl, onUploadComplete }) => 
                     />
                     {uploading && (
                         <View style={tw`absolute inset-0 bg-black bg-opacity-60 rounded-full justify-center items-center`}>
-                            <Progress.Circle 
-                                size={80} 
-                                progress={progress} 
+                            <Progress.Circle
+                                size={80}
+                                progress={progress}
                                 color="#4ade80"
                                 thickness={6}
                                 showsText={true}
