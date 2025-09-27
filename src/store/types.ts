@@ -47,7 +47,7 @@ export interface User {
   role?: 'user' | 'business';
   avatarUrl?: string | null;
   bio?: string;
-   address?: BusinessLocation | null;
+  address?: BusinessLocation | null;
   businessProfile?: BusinessProfile | null; // Can be null
 }
 
@@ -59,7 +59,7 @@ export interface RegisterUserData {
   password?: string;
   role?: 'user' | 'business';
   avatarUrl?: string | null;
-   address?: BusinessLocation | null;
+  address?: BusinessLocation | null;
 }
 
 // Data for login
@@ -77,6 +77,70 @@ export interface UpdateUserData {
   avatarUrl?: string | null;
   bio?: string;
   role?: 'user' | 'business';
-   address?: BusinessLocation | null; 
+  address?: BusinessLocation | null;
   password?: string; // Optional: for password changes
+}
+
+
+// Tax structure
+export interface TaxRate {
+  _id: string;
+  name: string;        // e.g., "GST 18%"
+  rate: number;        // e.g., 18
+  description?: string;
+  isActive: boolean;
+}
+
+
+// Yeh Blueprint (Template) ka structure hai
+export interface ItemTemplate {
+  _id: string;
+  business: string;
+  templateName: string;
+  modelType: 'e-commerce' | 'booking' | 'subscription';
+  fields: {
+    fieldName: string;
+    label: string;
+    fieldType: 'text' | 'number' | 'textarea' | 'dropdown' | 'checkbox';
+    options?: string[];
+  }[];
+}
+
+// Yeh asli Product/Service/Plan (Item) ka structure hai
+export interface CatalogItem {
+  _id: string;
+  business: string;
+  template: string;
+  name: string;
+  description?: string;
+  images?: string[];
+  category?: string;
+  tags?: string[];
+  isActive: boolean;
+  // Pricing
+  pricing?: {
+    mrp?: number;
+    sellingPrice: number;
+    discountNote?: string;
+  };
+
+  tax?: TaxRate | null;
+
+  subscriptionPlans?: {
+    cycle: 'daily' | 'weekly' | 'monthly' | 'yearly';
+    price: number;
+  }[];
+  stock?: number;
+  durationInMinutes?: number;
+  dynamicFields: {
+    [key: string]: any; // e.g., { "size": "M", "color": "Red" }
+  };
+  // Analytics
+  views: number;
+  clicks: number;
+  likes: number;
+  shares: number;
+  rating: number;
+  numReviews: number;
+  reviews: any[]; // Aap isey baad mein Review type se replace kar sakte hain
 }

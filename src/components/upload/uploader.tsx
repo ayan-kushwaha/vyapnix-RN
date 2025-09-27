@@ -1,3 +1,4 @@
+// srccomponents/upload/uploader
 import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, ImageSourcePropType } from 'react-native';
 import { Camera } from 'lucide-react-native';

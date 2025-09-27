@@ -2,55 +2,74 @@ import "react-native-gesture-handler";
 import React, { useEffect, useCallback } from 'react';
 import { Provider } from 'react-redux';
 import { Stack, useRouter, useSegments, SplashScreen } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, Platform, StatusBar } from "react-native";
 import * as NavigationBar from "expo-navigation-bar";
 
 // Redux Store & Actions
 import { store } from '../src/store/store';
-import { useAppSelector } from '../src/store/hooks';
+import { useAppDispatch, useAppSelector } from '../src/store/hooks';
+import { setUserOnLoad } from '../src/store/authSlice';
 
-// Context Providers (AuthProvider is now removed)
+// Context Providers
 import ThemeProvider, { useTheme } from '../src/context/ThemeContext';
 import { LanguageProvider } from '../src/context/LanguageContext';
 import { RoleProvider } from '../src/context/RoleContext';
 
-// Keep the splash screen visible while the app is loading
 SplashScreen.preventAutoHideAsync();
 
 function RootNavigationLayout() {
-  // Data ab sirf Redux se aa raha hai
-  const { user, isLoading } = useAppSelector((state) => state.auth);
-  const segments = useSegments();
+  const dispatch = useAppDispatch();
   const router = useRouter();
+  const segments = useSegments();
   const { theme } = useTheme();
+  const { user, isLoading } = useAppSelector((state) => state.auth);
 
-  // Yeh hook navigation ko control karta hai
+  // ✨ FIX 1: This useEffect now loads the user session from storage on app start
   useEffect(() => {
-    // Agar Redux initial user data load kar raha hai, to kuch na karein
+    async function loadUserFromStorage() {
+      try {
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedUser) {
+          // If a user is found in storage, load them into the Redux state
+          dispatch(setUserOnLoad(JSON.parse(storedUser)));
+        } else {
+          // If no user is found, tell Redux we are done loading
+          dispatch(setUserOnLoad(null));
+        }
+      } catch (e) {
+        console.warn('Failed to load user from storage:', e);
+        dispatch(setUserOnLoad(null)); // Ensure loading finishes even on error
+      }
+    }
+    loadUserFromStorage();
+  }, [dispatch]);
+
+  // ✨ FIX 2: This useEffect now handles navigation correctly
+  useEffect(() => {
+    // If we are still in the initial loading state, do nothing
     if (isLoading) {
       return;
     }
 
     const inAuthGroup = segments[0] === '(auth)';
 
-    // 1. Agar user login hai aur woh abhi bhi login/register screen par hai
+    // If user is logged in and on an auth screen, navigate to home
     if (user?.token && inAuthGroup) {
       router.replace('/(tabs)/home');
-    } 
-    // 2. Agar user login nahi hai aur woh app ke andar ki screen par hai
+    }
+    // If user is not logged in and is inside the app, navigate to login
     else if (!user?.token && !inAuthGroup) {
       router.replace('/(auth)/login');
     }
   }, [user, segments, isLoading, router]);
 
-  // Jab layout taiyar ho jaye to splash screen ko hide karein
   const onLayoutRootView = useCallback(async () => {
     if (!isLoading) {
       await SplashScreen.hideAsync();
     }
   }, [isLoading]);
 
-  // Android aur iOS ke liye bar styling
   useEffect(() => {
     if (Platform.OS === "android") {
       NavigationBar.setBackgroundColorAsync(theme.colors.background);
@@ -59,8 +78,7 @@ function RootNavigationLayout() {
     StatusBar.setBarStyle(theme.mode === 'dark' ? "light-content" : "dark-content");
   }, [theme]);
 
-  // Jab tak Redux pehli baar user ki sthiti jaanch raha hai, kuch bhi na dikhayein.
-  // Is dauran native splash screen dikhti rahegi.
+  // While isLoading is true, the native splash screen will remain visible
   if (isLoading) {
     return null;
   }
@@ -76,14 +94,13 @@ function RootNavigationLayout() {
   );
 }
 
-// Yeh main component hai jo poore app ko sahi providers ke saath wrap karta hai
+// The RootLayout with all providers remains the same
 export default function RootLayout() {
   return (
     <Provider store={store}>
       <ThemeProvider>
         <LanguageProvider>
           <RoleProvider>
-            {/* ✨ AuthProvider yahan se hata diya gaya hai */}
             <RootNavigationLayout />
           </RoleProvider>
         </LanguageProvider>

@@ -1,3 +1,4 @@
+//src/componets/FormUi
 import React, { FC, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, TextInputProps } from 'react-native';
 import { LucideIcon, Eye, EyeOff } from 'lucide-react-native';
