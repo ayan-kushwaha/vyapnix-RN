@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions, NativeSyntheticEvent, NativeScrollEvent, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from 'twrnc';
-import { ArrowLeft, Edit, Trash2, Tag, Info, Warehouse, Eye, ThumbsUp, Star, MoreVertical, Globe, Lock } from 'lucide-react-native';
+import { ArrowLeft, Edit, Trash2, Tag, Info, Warehouse, Eye, ThumbsUp, Star, MoreVertical, Globe, Lock, ImageIcon } from 'lucide-react-native';
 
 import { useTheme } from '@/src/context/ThemeContext';
 import { CatalogItem, ItemTemplate } from '@/src/store/types';
@@ -96,7 +96,12 @@ export const ItemDetailView: React.FC<ItemDetailViewProps> = ({ item, template, 
                         {displayItem.images && displayItem.images.length > 0 ? (
                             displayItem.images.map((img, index) => <Image key={index} source={{ uri: img }} style={{ width, height: '100%' }} />)
                         ) : (
-                            <View style={[tw`items-center justify-center`, { width }]}><Text style={{ color: theme.colors.textSecondary as string }}>{t.noImage}</Text></View>
+                            <View style={[tw`h-full w-full  items-center justify-center`, { backgroundColor: theme.colors.border, width }]}>
+                                <ImageIcon size={60} color={theme.colors.textSecondary as string} />
+                                <Text style={{ color: theme.colors.textSecondary as string }}>
+                                    {t.noImage}
+                                </Text>
+                            </View>
                         )}
                     </ScrollView>
                     {displayItem.images && displayItem.images.length > 1 && (

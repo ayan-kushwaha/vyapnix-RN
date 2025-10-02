@@ -1,10 +1,13 @@
 //src/componets/FormUi
 import React, { FC, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, TextInputProps } from 'react-native';
-import { LucideIcon, Eye, EyeOff } from 'lucide-react-native';
+import { View, Text, TextInput, TouchableOpacity, TextInputProps, Switch, Platform, Modal, Pressable, FlatList } from 'react-native';
+import { LucideIcon, Eye, EyeOff, Calendar as CalendarIcon, Clock, Check, CheckSquare } from 'lucide-react-native';
 import tw from 'twrnc';
 import { useTheme } from '../../context/ThemeContext';
 export * from './SearchableDropdown';
+import DateTimePicker from '@react-native-community/datetimepicker';
+export * from './SearchableDropdown';
+export * from '../upload/ImageUploader';
 
 // --- Props ki Typing ---
 interface CustomInputProps extends TextInputProps {
@@ -38,7 +41,7 @@ export const CustomInput: FC<CustomInputProps> = ({ icon: Icon, label, multiline
                         { color: theme.colors.text },
                         multiline && { textAlignVertical: 'top' } // This is the key for textarea behavior
                     ]}
-                    placeholderTextColor={theme.colors.textSecondary}
+                    placeholderTextColor={theme.colors.textSecondary as string}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
                     secureTextEntry={secureText}
@@ -108,6 +111,64 @@ export const OtpInput: FC<{ label: string }> = ({ label }) => {
                 ))}
             </View>
         </View>
+    );
+};
+// 2. Switch (On/Off) ke liye
+export const SwitchInput = ({ label, value, onValueChange }: { label: string, value: boolean, onValueChange: (val: boolean) => void }) => {
+    const { theme } = useTheme();
+    return (
+        <View style={tw`mb-4`}>
+            <Text style={[tw`text-sm font-medium mb-2`, { color: theme.colors.textSecondary }]}>{label}</Text>
+            <View style={[tw`flex-row justify-between items-center p-4 rounded-xl h-14`, { backgroundColor: theme.colors.card, borderColor: theme.colors.border, borderWidth: 2 }]}>
+                <Text style={{ color: value ? theme.colors.primary as string : theme.colors.text }}>{value ? 'Yes' : 'No'}</Text>
+                <Switch value={value} onValueChange={onValueChange} trackColor={{ false: theme.colors.border as string, true: theme.colors.primary as string }} thumbColor={"white"} />
+            </View>
+        </View>
+    );
+};
+
+// 3. Date & Time Picker ke liye
+export const DateTimeInput = ({ label, value, onValueChange, mode }: { label: string, value: Date, onValueChange: (date: Date) => void, mode: 'date' | 'time' }) => {
+    const { theme } = useTheme();
+    const [showPicker, setShowPicker] = useState(false);
+    const Icon = mode === 'date' ? CalendarIcon : Clock;
+    const displayValue = value ? (mode === 'date' ? value.toLocaleDateString() : value.toLocaleTimeString()) : `Select ${mode}`;
+
+    return (
+        <View style={tw`mb-4`}>
+            <Text style={[tw`text-sm font-medium mb-2`, { color: theme.colors.textSecondary }]}>{label}</Text>
+            <TouchableOpacity onPress={() => setShowPicker(true)}>
+                <View style={[tw`flex-row items-center p-3 rounded-xl border-2 h-14`, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+                    <Icon color={theme.colors.textSecondary as string} size={20} />
+                    <Text style={[tw`flex-1 ml-3 text-base`, { color: theme.colors.text }]}>{displayValue}</Text>
+                </View>
+            </TouchableOpacity>
+            {showPicker && (
+                <DateTimePicker
+                    value={value || new Date()}
+                    mode={mode}
+                    display="default"
+                    onChange={(_, selectedDate) => {
+                        setShowPicker(Platform.OS === 'ios');
+                        if (selectedDate) onValueChange(selectedDate);
+                    }}
+                />
+            )}
+        </View>
+    );
+};
+
+
+// 4. Checkbox
+export const CheckboxInput = ({ label, value, onValueChange }: { label: string, value: boolean, onValueChange: (val: boolean) => void }) => {
+    const { theme } = useTheme();
+    return (
+        <TouchableOpacity onPress={() => onValueChange(!value)} style={tw`flex-row items-center mb-4`}>
+            <View style={[tw`w-6 h-6 rounded border-2 justify-center items-center`, { borderColor: theme.colors.primary as string, backgroundColor: value ? theme.colors.primary as string : 'transparent' }]}>
+                {value && <Check size={16} color="white" />}
+            </View>
+            <Text style={[tw`ml-3 text-base`, { color: theme.colors.text }]}>{label}</Text>
+        </TouchableOpacity>
     );
 };
 

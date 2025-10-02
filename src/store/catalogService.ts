@@ -92,6 +92,59 @@ const addReview = async (itemId: string, reviewData: { rating: number, comment: 
     return response.data;
 };
 
+
+
+
+// ... (updateTemplate, deleteTemplate, etc. waise hi rahenge)
+
+// --- Public & Clone Template Service ---
+
+// ✅ NEW: Saare public starter templates laane ke liye
+const getPublicTemplates = async () => {
+    // Iske liye token ki zaroorat nahi hai
+    const response = await axios.get(`${API_URL}/public-templates`);
+    return response.data;
+};
+
+// ✅ NEW: Ek public template ko user ke account mein copy (clone) karne ke liye
+const cloneTemplate = async (templateId: string, token: string) => {
+    const config = { headers: { Authorization: `Bearer ${token}` } };
+    const response = await axios.post(`${API_URL}/templates/clone/${templateId}`, {}, config); // Body khaali bhej sakte hain
+    return response.data;
+};
+
+
+// ✅ NEW: Admin ke liye naye service functions
+const adminCreateTemplate = async (templateData: Partial<ItemTemplate>, token: string) => {
+    const config = { headers: { Authorization: `Bearer ${token}` } };
+    const response = await axios.post(`${API_URL}/admin/templates`, templateData, config);
+    return response.data;
+};
+const adminUpdateTemplate = async (templateId: string, templateData: Partial<ItemTemplate>, token: string) => {
+    const config = { headers: { Authorization: `Bearer ${token}` } };
+    const response = await axios.put(`${API_URL}/admin/templates/${templateId}`, templateData, config);
+    return response.data;
+};
+const adminDeleteTemplate = async (templateId: string, token: string) => {
+    const config = { headers: { Authorization: `Bearer ${token}` } };
+    await axios.delete(`${API_URL}/admin/templates/${templateId}`, config);
+    return templateId; // Delete ke baad ID wapas bhejein
+};
+
+
+
+const updateTemplateWithMerge = async (templateId: string, token: string) => {
+    const config = {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    };
+    const { data } = await axios.put(`${API_URL}/templates/${templateId}/merge-update`, {}, config);
+    return data;
+};
+
+
+
 const catalogService = {
     createTemplate,
     getMyTemplates,
@@ -105,6 +158,10 @@ const catalogService = {
     deleteItem,
     trackEvent,         // ✨ Joda gaya
     addReview,
+    getPublicTemplates,
+    cloneTemplate,
+    // ✅ Admin functions
+    adminCreateTemplate, adminUpdateTemplate, adminDeleteTemplate, updateTemplateWithMerge
 };
 
 export default catalogService;

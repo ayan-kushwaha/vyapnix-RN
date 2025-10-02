@@ -10,8 +10,10 @@ interface CatalogState {
     currentItem: CatalogItem | null;
     currentTemplateDetails: { template: ItemTemplate; items: CatalogItem[] } | null;
     isLoading: boolean;
+    isSuccess: boolean;
     isError: boolean;
     message: string;
+    publicTemplates: ItemTemplate[];
 }
 
 const initialState: CatalogState = {
@@ -22,6 +24,8 @@ const initialState: CatalogState = {
     isLoading: false,
     isError: false,
     message: '',
+    isSuccess: false,
+    publicTemplates: [], // ✅ Initial state
 };
 
 // --- Async Thunks ---
@@ -59,8 +63,6 @@ export const deleteItem = createAsyncThunk('catalog/deleteItem', async (itemId: 
     await catalogService.deleteItem(itemId, token);
     return itemId; // Sirf ID wapas bhejein
 });
-
-
 
 export const deleteTemplate = createAsyncThunk('catalog/deleteTemplate', async (templateId: string, thunkAPI) => {
     const token = (thunkAPI.getState() as RootState).auth.user!.token;
@@ -102,6 +104,70 @@ export const addReview = createAsyncThunk('catalog/addReview', async ({ itemId, 
     const token = (thunkAPI.getState() as RootState).auth.user!.token;
     return await catalogService.addReview(itemId, reviewData, token);
 });
+
+
+
+// ✅ NEW THUNK: Saare public templates fetch karne ke liye
+export const getPublicTemplates = createAsyncThunk<ItemTemplate[], void, { rejectValue: string }>(
+    'catalog/getPublicTemplates',
+    async (_, thunkAPI) => {
+        try {
+            return await catalogService.getPublicTemplates();
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue('Failed to fetch public templates.');
+        }
+    }
+);
+
+// ✅ NEW THUNK: Ek template ko clone karne ke liye
+export const cloneTemplate = createAsyncThunk<ItemTemplate, string, { state: RootState; rejectValue: string }>(
+    'catalog/cloneTemplate',
+    async (templateId, thunkAPI) => {
+        try {
+            const token = thunkAPI.getState().auth.user!.token;
+            return await catalogService.cloneTemplate(templateId, token);
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue('Failed to clone template.');
+        }
+    }
+);
+
+// / --- Admin Thunks ---
+// ✅ NEW: Naya public template banane ke liye
+export const adminCreateTemplate = createAsyncThunk('catalog/adminCreateTemplate', async (templateData: Partial<ItemTemplate>, thunkAPI) => {
+    const token = (thunkAPI.getState() as RootState).auth.user!.token;
+    return await catalogService.adminCreateTemplate(templateData, token);
+});
+// ✅ NEW: Public template ko update karne ke liye
+export const adminUpdateTemplate = createAsyncThunk('catalog/adminUpdateTemplate', async ({ templateId, templateData }: { templateId: string, templateData: Partial<ItemTemplate> }, thunkAPI) => {
+    const token = (thunkAPI.getState() as RootState).auth.user!.token;
+    return await catalogService.adminUpdateTemplate(templateId, templateData, token);
+});
+// ✅ NEW: Public template ko delete karne ke liye
+export const adminDeleteTemplate = createAsyncThunk('catalog/adminDeleteTemplate', async (templateId: string, thunkAPI) => {
+    const token = (thunkAPI.getState() as RootState).auth.user!.token;
+    await catalogService.adminDeleteTemplate(templateId, token);
+    return templateId; // Sirf ID wapas bhejein
+});
+
+
+// -------------------- Merge Update --------------------
+export const updateTemplateWithMerge = createAsyncThunk<CatalogItem, string, { state: RootState }>(
+    'catalog/updateTemplateWithMerge',
+    async (templateId, thunkAPI) => {
+        try {
+            const token = thunkAPI.getState().auth.user?.token;
+            if (!token) throw new Error('No auth token found');
+
+            const data = await catalogService.updateTemplateWithMerge(templateId, token);
+            return data;
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(error.response?.data?.message || error.message || 'Update failed');
+        }
+    }
+);
+
+
 
 // --- Slice ---
 const catalogSlice = createSlice({
@@ -193,7 +259,60 @@ const catalogSlice = createSlice({
                     // Hum maan lete hain ki like ho gaya aur UI turant update kar dete hain
                     state.items[itemIndex].likes += 1;
                 }
+            })
+            // --- Public Templates ---
+            .addCase(getPublicTemplates.pending, (state) => { state.isLoading = true; })
+            .addCase(getPublicTemplates.fulfilled, (state, action: PayloadAction<ItemTemplate[]>) => {
+                state.isLoading = false;
+                state.publicTemplates = action.payload;
+            })
+            .addCase(getPublicTemplates.rejected, (state, action) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = action.payload || 'Could not fetch public templates.';
+            })
+
+            // --- Clone Template ---
+            .addCase(cloneTemplate.pending, (state) => { state.isLoading = true; })
+            .addCase(cloneTemplate.fulfilled, (state, action: PayloadAction<ItemTemplate>) => {
+                state.isLoading = false;
+                // ✅ Jab template clone ho jaye, to use user ki private list mein jod do
+                state.templates.push(action.payload);
+            })
+            .addCase(cloneTemplate.rejected, (state, action) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = action.payload || 'Could not clone the template.';
+            })
+            // ✅ Admin Template Actions
+            .addCase(adminCreateTemplate.fulfilled, (state, action: PayloadAction<ItemTemplate>) => {
+                state.publicTemplates.push(action.payload);
+            })
+            .addCase(adminUpdateTemplate.fulfilled, (state, action: PayloadAction<ItemTemplate>) => {
+                const index = state.publicTemplates.findIndex(t => t._id === action.payload._id);
+                if (index !== -1) {
+                    state.publicTemplates[index] = action.payload;
+                }
+            })
+            .addCase(adminDeleteTemplate.fulfilled, (state, action: PayloadAction<string>) => {
+                state.publicTemplates = state.publicTemplates.filter(t => t._id !== action.payload);
+            })
+            // updateTemplateWithMerge
+            .addCase(updateTemplateWithMerge.pending, (state) => { state.isLoading = true; })
+            .addCase(updateTemplateWithMerge.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                const idx = state.items.findIndex(i => i._id === action.payload._id);
+                if (idx !== -1) state.items[idx] = action.payload;
+                else state.items.push(action.payload);
+            })
+            .addCase(updateTemplateWithMerge.rejected, (state, action) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = action.payload as string;
             });
+
+
     },
 });
 

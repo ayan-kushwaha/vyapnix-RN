@@ -49,6 +49,7 @@ export interface User {
   bio?: string;
   address?: BusinessLocation | null;
   businessProfile?: BusinessProfile | null; // Can be null
+  isAdmin?: boolean;
 }
 
 // Data for new user registration
@@ -100,9 +101,20 @@ export interface ItemTemplate {
   fields: {
     fieldName: string;
     label: string;
-    fieldType: 'text' | 'number' | 'textarea' | 'dropdown' | 'checkbox';
+    fieldType: 'text' | 'number' | 'textarea' | 'dropdown-single' | 'dropdown-multi' | 'checkbox' | 'date' | 'switch' | 'file' | 'currency' | 'time';
     options?: string[];
+    validation?: {
+      isRequired: boolean;
+      minLength?: number;
+      maxLength?: number;
+    };
+    isSystemField?: boolean;
   }[];
+  isPublic?: boolean;
+  createdBy?: 'System' | 'User';
+  version?: number;
+  originTemplate?: ItemTemplate | string; // Original public template (ya uski ID)
+  originVersion?: number;
 }
 
 // Yeh asli Product/Service/Plan (Item) ka structure hai
@@ -116,7 +128,7 @@ export interface CatalogItem {
   category?: string;
   tags?: string[];
   isActive: boolean;
-
+  tax?: TaxRate | string | null;
   // ✅ FIX: `pricingOptions` ab sabhi cases (e-commerce, subscription) ke liye kaam karega.
   // Yeh aapke Postman example se bilkul match karta hai.
   pricingOptions?: {
@@ -132,7 +144,6 @@ export interface CatalogItem {
   // Puraani `pricing` property ko hata diya gaya hai taaki confusion na ho.
   // `subscriptionPlans` ki bhi zaroorat nahi hai kyunki `pricingOptions` hi sab handle kar raha hai.
 
-  tax?: TaxRate | null;
   stock?: number;
   durationInMinutes?: number;
   dynamicFields: {
