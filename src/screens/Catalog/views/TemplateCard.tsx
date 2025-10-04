@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert } from 'react-native';
 import tw from 'twrnc';
-import { MoreVertical, Plus, Trash2, Edit, AlertCircle } from 'lucide-react-native';
+import { MoreVertical, Plus, Trash2, Edit, AlertCircle, PlusCircle } from 'lucide-react-native';
 import { useAppDispatch } from '@/src/store/hooks';
 import { deleteTemplate, deleteItem } from '@/src/store/catalogSlice';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -57,9 +57,10 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template, allItems, 
   };
 
   const modalActions = [
+    { title: 'Add Items', icon: PlusCircle, onPress: onAddItem },
     { title: 'Edit Template', icon: Edit, onPress: onEditTemplate },
     ...(isUpdateAvailable ? [{ title: 'Update Available', icon: AlertCircle, onPress: () => onNavigateToUpdate(template) }] : []),
-    { title: 'Delete Template', icon: Trash2, onPress: handleDelete, isDestructive: true }
+    { title: 'Delete Template', icon: Trash2, onPress: handleDelete, isDestructive: true },
   ];
 
   return (
@@ -70,7 +71,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template, allItems, 
         actions={modalActions}
         title={`Actions for '${template.templateName}'`}
       />
-      <View style={tw`my-3`}>
+      <View style={tw`my-2`}>
         <View style={tw`flex-row justify-between items-center px-4 mb-3`}>
           <View style={tw`flex-1 mr-2`}>
             <Text style={[tw`text-xl font-bold`, { color: theme.colors.text }]}>{template.templateName}</Text>
@@ -82,10 +83,11 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template, allItems, 
                 </View>
               </TouchableOpacity>
             )}
+
           </View>
           <View style={tw`flex-row items-center`}>
-            <TouchableOpacity onPress={onAddItem} style={[tw`flex-row items-center p-2 rounded-lg mr-2`, { backgroundColor: theme.colors.primary + '20' }]}>
-              <Plus size={16} color={theme.colors.primary as string} /><Text style={[tw`ml-1 font-semibold`, { color: theme.colors.primary as string }]}>Add Item</Text>
+            <TouchableOpacity onPress={onAddItem} style={[tw`flex-row items-center p-2 justify-center rounded-lg mr-1`, { backgroundColor: theme.colors.primary + '20' }]}>
+              <Plus size={20} color={theme.colors.primary as string} /><Text style={[tw` font-semibold`, { color: theme.colors.primary as string }]}></Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => openMenuFor('template')}><MoreVertical size={24} color={theme.colors.textSecondary as string} /></TouchableOpacity>
           </View>

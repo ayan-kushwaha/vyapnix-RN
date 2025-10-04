@@ -14,7 +14,16 @@ import { ActionsModal } from '../ActionsModal';
 
 const { width } = Dimensions.get('window');
 
-// --- Sub-component for rows ---
+// --- Interface ---
+interface ItemDetailViewProps {
+    item: CatalogItem;
+    template: ItemTemplate;
+    onClose: () => void;
+    onEdit: () => void;
+    onDelete: () => void;
+}
+
+// --- DetailRow Sub-component ---
 const DetailRow = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value: string }) => {
     const { theme } = useTheme();
     return (
@@ -28,23 +37,7 @@ const DetailRow = ({ icon: Icon, label, value }: { icon: React.ElementType, labe
     );
 };
 
-// --- Helper to safely render dynamic fields ---
-const renderCustomerField = (fields: Record<string, any> = {}, templateFields: any[] = []) => {
-    return Object.entries(fields).map(([key, value]) => {
-        const fieldLabel = templateFields.find(f => f.fieldName === key)?.label || key;
-        return <DetailRow key={key} icon={Tag} label={fieldLabel} value={String(value)} />;
-    });
-};
-
 // --- Main Component ---
-interface ItemDetailViewProps {
-    item: CatalogItem;
-    template: ItemTemplate;
-    onClose: () => void;
-    onEdit: () => void;
-    onDelete: () => void;
-}
-
 export const ItemDetailView: React.FC<ItemDetailViewProps> = ({ item, template, onClose, onEdit, onDelete }) => {
     const { theme } = useTheme();
     const { locale } = useLanguage();
@@ -53,10 +46,12 @@ export const ItemDetailView: React.FC<ItemDetailViewProps> = ({ item, template, 
     const [activeIndex, setActiveIndex] = useState(0);
     const [isMenuVisible, setMenuVisible] = useState(false);
 
+    // Get the latest version of the item from the Redux store
     const itemFromStore = useAppSelector((state) =>
         state.catalog.items.find(i => i._id === item._id)
     );
     const displayItem = itemFromStore || item;
+
     const price = (displayItem as any).pricingOptions?.[0];
 
     const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -89,28 +84,34 @@ export const ItemDetailView: React.FC<ItemDetailViewProps> = ({ item, template, 
             </View>
 
             <ScrollView style={tw`flex-1 mb-16`}>
-                {/* Image Slider */}
+                {/* Image Slider Section */}
                 <View style={tw`h-72 bg-gray-200 dark:bg-gray-800`}>
-                    <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onScroll={handleScroll} scrollEventThrottle={16}>
+                    <ScrollView
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        onScroll={handleScroll}
+                        scrollEventThrottle={16}
+                    >
                         {displayItem.images && displayItem.images.length > 0 ? (
                             displayItem.images.map((img, index) => <Image key={index} source={{ uri: img }} style={{ width, height: '100%' }} />)
                         ) : (
-                            <View style={[tw`h-full w-full items-center justify-center`, { backgroundColor: theme.colors.border, width }]}>
+                            <View style={[tw`h-full w-full  items-center justify-center`, { backgroundColor: theme.colors.border, width }]}>
                                 <ImageIcon size={60} color={theme.colors.textSecondary as string} />
-                                <Text style={{ color: theme.colors.textSecondary as string }}>{t.noImage}</Text>
+                                <Text style={{ color: theme.colors.textSecondary as string }}>
+                                    {t.noImage}
+                                </Text>
                             </View>
                         )}
                     </ScrollView>
                     {displayItem.images && displayItem.images.length > 1 && (
                         <View style={tw`absolute bottom-4 left-0 right-0 flex-row justify-center items-center`}>
-                            {displayItem.images.map((_, index) => (
-                                <View key={index} style={[tw`h-2 w-2 rounded-full mx-1.5`, { backgroundColor: activeIndex === index ? theme.colors.primary as string : 'rgba(255, 255, 255, 0.5)' }]} />
-                            ))}
+                            {displayItem.images.map((_, index) => (<View key={index} style={[tw`h-2 w-2 rounded-full mx-1.5`, { backgroundColor: activeIndex === index ? theme.colors.primary as string : 'rgba(255, 255, 255, 0.5)' }]} />))}
                         </View>
                     )}
                 </View>
 
-                {/* Content */}
+                {/* Content Section */}
                 <View style={tw`p-4`}>
                     <Text style={[tw`text-3xl font-bold`, { color: theme.colors.text }]}>{displayItem.name}</Text>
 
@@ -121,7 +122,7 @@ export const ItemDetailView: React.FC<ItemDetailViewProps> = ({ item, template, 
                         <View style={tw`flex-row items-center`}><Star size={16} color={theme.colors.textSecondary as string} /><Text style={tw`ml-1.5 text-sm text-gray-500`}>{displayItem.rating?.toFixed(1) || 'N/A'}</Text></View>
                     </View>
 
-                    {/* Status Toggle */}
+                    {/* Public/Private Status Toggle */}
                     <View style={[tw`flex-row justify-between items-center p-4 my-2 rounded-lg`, { backgroundColor: theme.colors.card }]}>
                         <View style={tw`flex-1 mr-4`}>
                             <View style={tw`flex-row items-center`}>
@@ -139,7 +140,7 @@ export const ItemDetailView: React.FC<ItemDetailViewProps> = ({ item, template, 
                         />
                     </View>
 
-                    {/* Price */}
+                    {/* Price Breakdown */}
                     {price && (
                         <View style={[tw`p-4 my-2 rounded-lg`, { backgroundColor: theme.colors.card }]}>
                             <View style={tw`flex-row justify-between items-center`}><Text style={{ color: theme.colors.textSecondary }}>{t.price.basePrice}</Text><Text style={{ color: theme.colors.textSecondary }}>₹{(price.basePrice || 0).toFixed(2)}</Text></View>
@@ -154,9 +155,13 @@ export const ItemDetailView: React.FC<ItemDetailViewProps> = ({ item, template, 
 
                     {/* Dynamic Fields */}
                     <Text style={[tw`text-lg font-bold mt-6 mb-2`, { color: theme.colors.text }]}>{t.specifications}</Text>
-                    {renderCustomerField(displayItem.dynamicFields, template.fields)}
+                    {Object.entries(displayItem.dynamicFields).map(([key, value]) => {
+                        const fieldLabel = template.fields.find((f: { fieldName: string, label: string }) => f.fieldName === key)?.label || key;
+                        return <DetailRow key={key} icon={Tag} label={fieldLabel} value={String(value)} />
+                    })}
                 </View>
             </ScrollView>
         </SafeAreaView>
     );
 };
+

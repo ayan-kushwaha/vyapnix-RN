@@ -47,15 +47,15 @@ export const CatalogListView: React.FC<CatalogListViewProps> = ({
         { title: "Create Blank Template", icon: Plus, onPress: onNavigateToAddTemplate },
         { title: "Manage Tax Rates", icon: SlidersHorizontal, onPress: onNavigateToTaxManagement }
     ];
-    
+
     return (
         <SafeAreaView style={[tw`flex-1`, { backgroundColor: theme.colors.background }]}>
             <ActionsModal visible={isMenuVisible} onClose={() => setMenuVisible(false)} actions={menuActions} title="Catalog Options" />
-            <View style={[tw`p-4 border-b`, { borderColor: theme.colors.border }]}>
+            <View style={[tw`p-2 border-b`, { borderColor: theme.colors.border }]}>
                 <Text style={[tw`text-3xl font-bold`, { color: theme.colors.text }]}>{t.title}</Text>
                 <View style={tw`flex-row items-center mt-4`}>
                     <View style={[tw`flex-1 flex-row items-center p-3 rounded-xl h-14`, { backgroundColor: theme.colors.card }]}><Search color={theme.colors.textSecondary as string} size={20} /><TextInput style={[tw`flex-1 ml-3 h-full p-0 text-base`, { color: theme.colors.text }]} placeholder={t.searchPlaceholder} value={searchQuery} onChangeText={setSearchQuery} /></View>
-                    <TouchableOpacity onPress={() => setMenuVisible(true)} style={tw`ml-3 p-2`}><MoreVertical color={theme.colors.textSecondary as string} size={28} /></TouchableOpacity>
+                    <TouchableOpacity onPress={() => setMenuVisible(true)} style={tw` p-1`}><MoreVertical color={theme.colors.textSecondary as string} size={28} /></TouchableOpacity>
                 </View>
             </View>
             <FlatList

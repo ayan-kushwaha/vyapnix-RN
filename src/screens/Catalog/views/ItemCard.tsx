@@ -21,7 +21,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, onOpenMenu, onPress })
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
-      <View style={[tw`w-48 mr-4 rounded-md overflow-hidden`, { backgroundColor: theme.colors.card }, theme.shadows.md]} >
+      <View style={[tw`w-48 mr-4 mb-3 rounded-md overflow-hidden`, { backgroundColor: theme.colors.card }, theme.shadows.md]} >
         <View style={[tw`h-40 w-full  items-center justify-center`, { backgroundColor: theme.colors.border }]}>
           {item.images && item.images.length > 0 ?
             <Image source={{ uri: item.images[0] }} style={tw`h-full w-full`} resizeMode="cover" /> :

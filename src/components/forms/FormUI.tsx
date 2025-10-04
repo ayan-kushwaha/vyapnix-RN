@@ -113,6 +113,9 @@ export const OtpInput: FC<{ label: string }> = ({ label }) => {
         </View>
     );
 };
+
+
+
 // 2. Switch (On/Off) ke liye
 export const SwitchInput = ({ label, value, onValueChange }: { label: string, value: boolean, onValueChange: (val: boolean) => void }) => {
     const { theme } = useTheme();

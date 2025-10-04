@@ -45,18 +45,68 @@ export default function CatalogTabManager() {
         onNavigateToUpdate={(template) => setView({ mode: 'updateTemplate', template })}
       />
 
+    // case 'updateTemplate':
+    //   if (!view.template) return null;
+
+    //   const handleUpdate = async () => {
+    //     try {
+    //       await dispatch(updateTemplateWithMerge(view.template!._id)).unwrap();
+    //       Alert.alert("✅ Success", "Template updated successfully.");
+    //     } catch (err: any) {
+    //       const msg = err?.data?.message || err?.message || "Update Failed";
+    //       Alert.alert("❌ Error", msg);
+    //     }
+
+    //   };
+
+    //   return (
+    //     <View style={tw`flex-1 justify-center items-center p-4`}>
+    //       <Text style={tw`text-lg text-gray-400 text-center font-bold`}>
+    //         An update is available for "{view.template.templateName}".
+    //       </Text>
+    //       <Text style={tw`text-center my-2 text-gray-500`}>
+    //         Updating will add new fields from the starter template to your cloned version.
+    //         Your custom fields will not be affected. Are you sure?
+    //       </Text>
+
+    //       {/* Loader dikhana jab update chal raha ho */}
+    //       {isLoading ? (
+    //         <ActivityIndicator size="large" color="green" style={tw`mt-4`} />
+    //       ) : (
+    //         <>
+    //           <TouchableOpacity
+    //             onPress={handleUpdate}
+    //             style={tw`bg-green-500 p-3 rounded-lg mt-4 w-full items-center`}
+    //           >
+    //             <Text style={tw`text-white font-bold`}>Yes, Update Now</Text>
+    //           </TouchableOpacity>
+
+    //           <TouchableOpacity
+    //             onPress={() => setView({ mode: 'list' })}
+    //             style={tw`mt-2 p-2 w-full items-center`}
+    //           >
+    //             <Text style={tw`text-gray-500`}>Maybe Later</Text>
+    //           </TouchableOpacity>
+    //         </>
+    //       )}
+    //     </View>
+    //   );
     case 'updateTemplate':
       if (!view.template) return null;
 
       const handleUpdate = async () => {
         try {
+          // ✅ loader दिखेगा जब तक dispatch चल रहा है
           await dispatch(updateTemplateWithMerge(view.template!._id)).unwrap();
           Alert.alert("✅ Success", "Template updated successfully.");
+
+          // ✅ Update के बाद auto close + list पर redirect
+          setView({ mode: 'list' });
+
         } catch (err: any) {
           const msg = err?.data?.message || err?.message || "Update Failed";
           Alert.alert("❌ Error", msg);
         }
-
       };
 
       return (
@@ -69,7 +119,6 @@ export default function CatalogTabManager() {
             Your custom fields will not be affected. Are you sure?
           </Text>
 
-          {/* Loader dikhana jab update chal raha ho */}
           {isLoading ? (
             <ActivityIndicator size="large" color="green" style={tw`mt-4`} />
           ) : (
@@ -92,7 +141,6 @@ export default function CatalogTabManager() {
         </View>
       );
 
-    // ... baaki cases same rahenge ...
     case 'addTemplate': return <AddTemplateForm onClose={() => setView({ mode: 'list' })} />
     case 'manageTax': return <TaxManagementView onClose={() => setView({ mode: 'list' })} />
     case 'itemDetail':
