@@ -126,24 +126,13 @@ export default function UserProfilePage({ onEditProfilePress }: Props) {
                             <Text style={[tw`text-sm mt-1`, { color: theme.colors.textSecondary }]} selectable>
                                 {user.email}
                             </Text>
-                            <Text style={[tw`text-sm`, { color: theme.colors.text }]}>{user.mobileNumber}</Text>
-                            <View style={[
-                                tw`self-start rounded-full mt-1`, // ❌ w-fit को हटाकर self-start का इस्तेमाल करें
-                                { backgroundColor: theme.colors.primary + "20" }
-                            ]}>
-                                <Text
-                                    style={[tw`p-1 px-3`, { color: theme.colors.primary }]}
-                                    selectable
-                                >
-                                    {role}
-                                </Text>
-                            </View>
+                            <Text style={[tw`text-sm`, { color: theme.colors.textSecondary }]}>{user.mobileNumber}</Text>
                         </View>
                     </View>
                 </Animated.View>
 
                 {/* ===== BUSINESS PROFILE ===== */}
-                {role === "business" ? (
+                {user.role === "business" ? (
                     <>
                         {businessLoading && !business ? (
                             <ActivityIndicator style={tw`mt-8`} size="small" color={theme.colors.primary} />
@@ -218,4 +207,3 @@ const styles = StyleSheet.create({
         borderWidth: 2,
     },
 });
-// 

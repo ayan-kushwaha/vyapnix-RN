@@ -9,7 +9,7 @@ export const settingsScreenData = {
     // English
     en: {
         role: "Role",
-        roles: { user: "User", business: "Business" },
+        roles: { user: "User", business: "Business", employee: "Employee" },
         appearance: "Appearance",
         language: "Language",
         theme: "Theme",
@@ -38,7 +38,7 @@ export const settingsScreenData = {
     // Hindi
     hi: {
         role: "भूमिका",
-        roles: { user: "उपयोगकर्ता", business: "व्यापार" },
+        roles: { user: "उपयोगकर्ता", business: "व्यापार", employee: "कर्मचारी" },
         appearance: "दिखावट",
         language: "भाषा",
         theme: "थीम",
@@ -67,7 +67,7 @@ export const settingsScreenData = {
     // Hinglish
     'en-HI': {
         role: "Role",
-        roles: { user: "User", business: "Business" },
+        roles: { user: "User", business: "Business", employee: "Employee" },
         appearance: "Appearance",
         language: "Bhasha",
         theme: "Theme",

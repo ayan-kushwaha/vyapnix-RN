@@ -57,7 +57,7 @@ export default function ProfileScreen() {
     };
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             {/* Profile Page role ke hisaab se render hoga */}
             {renderProfilePage()}
 
@@ -72,7 +72,7 @@ export default function ProfileScreen() {
                     onClose={handleCloseModal}
                 />
             </Modal>
-        </View>
+        </SafeAreaView>
     );
 }
 

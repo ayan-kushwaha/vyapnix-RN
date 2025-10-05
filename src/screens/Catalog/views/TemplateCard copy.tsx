@@ -1,6 +1,6 @@
 // TemplateCard
 import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Alert } from 'react-native';
 import tw from 'twrnc';
 import { MoreVertical, Plus, Trash2, Edit, AlertCircle, PlusCircle } from 'lucide-react-native';
 import { useAppDispatch } from '@/src/store/hooks';
@@ -9,9 +9,6 @@ import { useTheme } from '@/src/context/ThemeContext';
 import { ItemTemplate, CatalogItem } from '@/src/store/types';
 import { ActionsModal } from '../ActionsModal';
 import { ItemCard } from './ItemCard';
-import { getCategoryLabel, getModelFullNames } from '@/src/data/businessTypesData';
-import { useLanguage } from '@/src/context/LanguageContext';
-import { LoopingWords } from '@/src/components/ui/LoopingWords';
 
 interface TemplateCardProps {
   template: ItemTemplate;
@@ -28,8 +25,6 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template, allItems, 
   const { theme } = useTheme();
   const [isActionsModalVisible, setActionsModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState<CatalogItem | null>(null);
-  const { locale } = useLanguage();
-  const t = locale ? locale.slice(0, 2).toLowerCase() : 'en';
 
   const templateItems = allItems.filter(item => {
     if (typeof item.template === 'string') return item.template === template._id;
@@ -77,55 +72,27 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template, allItems, 
         title={`Actions for '${template.templateName}'`}
       />
       <View style={tw`my-2`}>
-        <View style={tw``}>
-          <View style={tw`flex-row justify-between items-start px-4 mb-3`}>
-
+        <View style={tw`flex-row justify-between items-center px-4 mb-3`}>
+          <View style={tw`flex-1 mr-2`}>
             <Text style={[tw`text-xl font-bold`, { color: theme.colors.text }]}>{template.templateName}</Text>
-            {/* Action Buttons */}
-            <View style={tw`flex-row items-start`}>
-              {/* <TouchableOpacity onPress={onAddItem} style={[tw`flex-row items-center p-2 justify-center rounded-lg mr-1`, { backgroundColor: theme.colors.primary + '20' }]}>
-                <Plus size={20} color={theme.colors.primary} />
-              </TouchableOpacity> */}
-              <TouchableOpacity onPress={() => openMenuFor('template')}>
-                <MoreVertical size={24} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View style={tw`px-2 pb-2 flex-ro w w-full `}>
-            {/* Template Name */}
-
-            {/* Model Types Loop */}
-            <LoopingWords
-              words={getModelFullNames(Array.isArray(template.modelType) ? template.modelType : [template.modelType], t)}
-              duration={2000} // har word 2 sec dikhe
-              style={[tw`px-3 py- mr-2 rounded-full `, { backgroundColor: theme.colors.primary + "0" }]}
-              textStyle={[tw`text-xs font-semibold`, { color: theme.colors.primary }]}
-            />
-
-            {/* Categories Loop */}
-            <LoopingWords
-              words={(Array.isArray(template.categories) ? template.categories : [template.categories]).map(cat => getCategoryLabel(cat, t))}
-              duration={2500} // categories ke liye thoda slow
-              style={[tw`px-3 py- mr-2 rounded-full`, { backgroundColor: theme.colors.secondary + "0" }]}
-              textStyle={[tw`text-xs font-semibold`, { color: theme.colors.secondary }]}
-            />
-
-
-            {/* Update Available */}
+            <Text style={[tw`text-md`, { color: theme.colors.textSecondary }]}>{template.modelType}</Text>
             {isUpdateAvailable && (
-              <TouchableOpacity onPress={() => onNavigateToUpdate(template)} style={tw`mt-2 self-start`}>
+              <TouchableOpacity onPress={() => onNavigateToUpdate(template)} style={tw`mt-1 self-start`}>
                 <View style={[tw`flex-row items-center py-1 px-2 rounded-full`, { backgroundColor: theme.colors.secondary + '20' }]}>
-                  <AlertCircle size={12} color={theme.colors.secondary} />
-                  <Text style={[tw`text-xs font-bold ml-1`, { color: theme.colors.secondary }]}>Update Available</Text>
+                  <AlertCircle size={12} color={theme.colors.secondary as string} />
+                  <Text style={[tw`text-xs font-bold ml-1`, { color: theme.colors.secondary as string }]}>Update Available</Text>
                 </View>
               </TouchableOpacity>
             )}
+
           </View>
-
-
+          <View style={tw`flex-row items-center`}>
+            <TouchableOpacity onPress={onAddItem} style={[tw`flex-row items-center p-2 justify-center rounded-lg mr-1`, { backgroundColor: theme.colors.primary + '20' }]}>
+              <Plus size={20} color={theme.colors.primary as string} /><Text style={[tw` font-semibold`, { color: theme.colors.primary as string }]}></Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => openMenuFor('template')}><MoreVertical size={24} color={theme.colors.textSecondary as string} /></TouchableOpacity>
+          </View>
         </View>
-
-        {/* Catalog Items */}
         <FlatList
           horizontal
           data={templateItems}
@@ -133,14 +100,9 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template, allItems, 
           keyExtractor={(item) => item._id}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={tw`px-4`}
-          ListEmptyComponent={() => (
-            <View style={tw`h-24 w-40 justify-center items-center`}>
-              <Text style={{ color: theme.colors.textSecondary }}>No items yet.</Text>
-            </View>
-          )}
+          ListEmptyComponent={() => (<View style={tw`h-24 w-40 justify-center items-center`}><Text style={{ color: theme.colors.textSecondary as string }}>No items yet.</Text></View>)}
         />
       </View>
-
     </>
   );
 };

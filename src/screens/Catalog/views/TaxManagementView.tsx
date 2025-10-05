@@ -9,6 +9,7 @@ import { useAppDispatch, useAppSelector } from '@/src/store/hooks';
 import { getTaxes, deleteTax } from '@/src/store/taxSlice';
 import { TaxRate } from '@/src/store/types';
 import { TaxFormModal } from '../forms/TaxFormModal';
+import { useTabBar } from '@/src/context/TabBarContext';
 
 interface TaxManagementViewProps { onClose: () => void; }
 
@@ -16,10 +17,15 @@ export const TaxManagementView: React.FC<TaxManagementViewProps> = ({ onClose })
     const { theme } = useTheme();
     const dispatch = useAppDispatch();
     const { taxes, isLoading } = useAppSelector(state => state.tax);
+    const { setTabBarVisible } = useTabBar();
 
     const [isModalVisible, setModalVisible] = useState(false);
     const [taxToEdit, setTaxToEdit] = useState<TaxRate | null>(null);
 
+    useEffect(() => {
+        setTabBarVisible(false); // page open → hide tab
+        return () => setTabBarVisible(true); // page exit → show tab again
+    }, []);
     useEffect(() => {
         dispatch(getTaxes());
     }, [dispatch]);
@@ -55,7 +61,7 @@ export const TaxManagementView: React.FC<TaxManagementViewProps> = ({ onClose })
     );
 
     return (
-        <SafeAreaView style={[tw`flex-1`, { backgroundColor: theme.colors.background }]}>
+        <View style={[tw`flex-1`, { backgroundColor: theme.colors.background }]}>
             <TaxFormModal visible={isModalVisible} onClose={() => setModalVisible(false)} taxToEdit={taxToEdit} />
 
             <View style={[tw`flex-row items-center justify-between p-4 border-b`, { borderColor: theme.colors.border }]}>
@@ -73,6 +79,6 @@ export const TaxManagementView: React.FC<TaxManagementViewProps> = ({ onClose })
                     ListEmptyComponent={<Text style={[tw`text-center mt-10`, { color: theme.colors.textSecondary }]}>No tax rates found. Add one to get started.</Text>}
                 />
             )}
-        </SafeAreaView>
+        </View>
     );
 };

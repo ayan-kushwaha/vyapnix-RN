@@ -13,6 +13,7 @@
     "preset": "jest-expo"
   },
   "dependencies": {
+    "@expo/metro-runtime": "^6.1.2",
     "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
@@ -39,6 +40,7 @@
     "expo-web-browser": "~15.0.7",
     "lucide-react": "^0.542.0",
     "lucide-react-native": "^0.541.0",
+    "moti": "^0.30.0",
     "nativewind": "^4.1.23",
     "prettier-plugin-tailwindcss": "^0.5.14",
     "react": "19.1.0",

@@ -13,6 +13,7 @@ import { addItemData } from '@/src/data/addItemData';
 import { CustomInput, SearchableDropdown, SwitchInput, DateTimeInput, CheckboxInput } from '@/src/components/forms/FormUI';
 import { ImageUploader } from '@/src/components/upload/ImageUploader';
 import { ItemTemplate, CatalogItem } from '@/src/store/types';
+import { useTabBar } from '@/src/context/TabBarContext';
 
 type Locale = "en" | "hi" | "en-HI";
 interface AddItemFormProps { onClose: () => void; template: ItemTemplate; itemToEdit?: CatalogItem | null; }
@@ -21,6 +22,7 @@ type FormData = { name: string; description: string; basePrice: string; stock: s
 export const AddItemForm: React.FC<AddItemFormProps> = ({ onClose, template, itemToEdit }) => {
     const { theme } = useTheme();
     const { locale } = useLanguage();
+    const { setTabBarVisible } = useTabBar();
     const t = (addItemData as any)[locale as Locale] || addItemData.en;
     const dispatch = useAppDispatch();
     const { isLoading } = useAppSelector(s => s.catalog);
@@ -181,10 +183,13 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({ onClose, template, ite
         );
     };
 
-    console.log('template', template)
+    useEffect(() => {
+        setTabBarVisible(false); // page open → hide tab
+        return () => setTabBarVisible(true); // page exit → show tab again
+    }, []);
 
     return (
-        <SafeAreaView style={[tw`flex-1 mb-10`, { backgroundColor: theme.colors.background }]}>
+        <View style={[tw`flex-1 `, { backgroundColor: theme.colors.background }]}>
             <View style={[tw`flex-row items-center p-4 border-b`, { borderColor: theme.colors.border }]}><TouchableOpacity onPress={onClose} style={tw`p-2`}><ArrowLeft size={24} color={theme.colors.text as string} /></TouchableOpacity><Text style={[tw`text-xl font-bold ml-4 w-full`, { color: theme.colors.text }]}>{itemToEdit ? t.editTitle : t.addTitle}</Text></View>
             <ScrollView contentContainerStyle={tw`p-6 pb-20`} keyboardShouldPersistTaps="handled">
                 <ImageUploader initialImages={formData.images} onImagesChanged={(newImages) => handleInputChange('images', newImages)} />
@@ -219,6 +224,6 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({ onClose, template, ite
 
                 <TouchableOpacity onPress={handleSaveItem} disabled={isLoading} style={[tw`mt-8 h-14 rounded-xl items-center justify-center`, { backgroundColor: theme.colors.primary as string, opacity: isLoading ? 0.9 : 1 }]}>{isLoading ? <ActivityIndicator color={theme.colors.text} /> : <Text style={tw`text-white text-md font-bold`}>{itemToEdit ? t.updateButton : t.saveButton}</Text>}</TouchableOpacity>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 };

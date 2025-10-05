@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, JSX } from 'react';
 import { View, Text, FlatList, ActivityIndicator, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from 'twrnc';
-import { ArrowLeft, PlusCircle, Copy, ShoppingCart, Calendar, Repeat, Search, MoreVertical, Edit, Trash2, CheckCircle, Eye, AlertCircle } from 'lucide-react-native';
+import { ArrowLeft, PlusCircle, Copy, ShoppingCart, Calendar, Repeat, Search, MoreVertical, Edit, Trash2, CheckCircle, Eye, AlertCircle, Briefcase, Package, Factory, Globe, Truck, HandFist } from 'lucide-react-native';
 
 import { useTheme } from '@/src/context/ThemeContext';
 import { useLanguage } from '@/src/context/LanguageContext';
@@ -12,6 +12,9 @@ import { ItemTemplate } from '@/src/store/types';
 import { chooseTemplateData } from '@/src/data/chooseTemplateData';
 import { ActionsModal } from '../ActionsModal';
 import { TemplatePreviewModal } from './TemplatePreviewModal';
+import { useTabBar } from '@/src/context/TabBarContext';
+import { LoopingWords } from '@/src/components/ui/LoopingWords';
+import { getCategoryLabel, getModelFullNames } from '@/src/data/businessTypesData';
 
 // --- Interface ---
 interface ChooseTemplateViewProps {
@@ -44,140 +47,201 @@ interface StarterCardProps {
     onNavigateToUpdate: (template: ItemTemplate) => void;
 }
 
-// --- Card Component ---
-const StarterTemplateCard: React.FC<StarterCardProps> = ({ template, onClone, cloneButtonText, onEdit, onDelete, onPreview, isCloning, onNavigateToUpdate }) => {
+// --- StarterTemplateCard ---
+const StarterTemplateCard: React.FC<StarterCardProps> = ({
+    template,
+    onClone,
+    cloneButtonText,
+    onEdit,
+    onDelete,
+    onPreview,
+    isCloning,
+    onNavigateToUpdate,
+}) => {
     const { theme } = useTheme();
-    const { user } = useAppSelector(state => state.auth);
-    const { templates: userTemplates } = useAppSelector(state => state.catalog);
-    const ModelIcon = getIconForModel(template.modelType);
+    const { user } = useAppSelector((state) => state.auth);
+    const { templates: userTemplates } = useAppSelector((state) => state.catalog);
     const [isMenuVisible, setMenuVisible] = useState(false);
+    const { locale } = useLanguage();
+    const t = locale ? locale.slice(0, 2).toLowerCase() : 'en';
 
-    const userCopy = userTemplates.find(t => (t.originTemplate as ItemTemplate)?._id === template._id);
+    const userCopy = userTemplates.find((t) => (t.originTemplate as ItemTemplate)?._id === template._id);
     const isAlreadyCloned = !!userCopy;
-    const isUpdateAvailable = isAlreadyCloned && userCopy.originVersion && template.version && userCopy.originVersion < template.version;
+    const isUpdateAvailable =
+        isAlreadyCloned &&
+        userCopy.originVersion &&
+        template.version &&
+        userCopy.originVersion < template.version;
 
     const adminActions = [
         { title: "Edit Template", icon: Edit, onPress: onEdit },
-        { title: "Delete Template", icon: Trash2, onPress: onDelete, isDestructive: true }
-    ].map((action, index) => ({ ...action, key: `${action.title}-${index}` })); // ✅ unique key ensured
+        { title: "Delete Template", icon: Trash2, onPress: onDelete, isDestructive: true },
+    ].map((action, index) => ({ ...action, key: `${action.title}-${index}` }));
+
+    const modelIcons: Record<string, any> = {
+        "e-commerce": ShoppingCart,
+        "booking": Calendar,
+        "subscription": Repeat,
+        "services": Briefcase,
+        "wholesale": Package,
+        "manufacturing": Factory,
+        "online": Globe,
+        "agriculture": Truck,
+    };
+
+    const modelTypeNames = getModelFullNames(
+        Array.isArray(template.modelType) ? template.modelType : [template.modelType],
+        t
+    );
+
+    const categoryNames = (Array.isArray(template.categories) ? template.categories : [template.categories]).map(
+        (cat: string) => getCategoryLabel(cat, t)
+    );
+
+    // --- Helper Component for badge ---
+    const Badge: React.FC<{ text: string; color: string; icon?: JSX.Element }> = ({ text, color, icon }) => (
+        <View
+            style={[
+                tw`px-3 py-1 mr-2 mb-2 rounded-full flex-row items-center`,
+                { backgroundColor: color + "20" },
+            ]}
+        >
+            {icon && <View style={tw`mr-1`}>{icon}</View>}
+            <Text style={[tw`text-xs font-semibold`, { color: theme.colors.text }]} numberOfLines={1}>
+                {text}
+            </Text>
+        </View>
+    );
 
     return (
-        <View style={[tw`rounded-xl p-3 mb-4`, { backgroundColor: theme.colors.card, borderColor: theme.colors.border, borderWidth: 1 }]}>
+        <View
+            style={[
+                tw`rounded-xl p-4 mb-4 shadow-sm`,
+                { backgroundColor: theme.colors.card, borderColor: theme.colors.border, borderWidth: 1 },
+            ]}
+        >
+            {/* Actions Modal */}
             <ActionsModal
                 visible={isMenuVisible}
                 onClose={() => setMenuVisible(false)}
                 actions={adminActions}
-                title={template.templateName}
+                title={template.templateName + " " + "v" + template.version}
             />
-            <View style={tw`flex-row items-start mb-2`}>
-                <View style={[tw`p-3 rounded-full mr-4`, { backgroundColor: theme.colors.primary + '20' }]}>
-                    <ModelIcon size={22} color={theme.colors.primary as string} />
-                </View>
-                <View style={tw`flex-1`}>
-                    <Text style={[tw`text-lg font-bold`, { color: theme.colors.text }]}>
-                        {template.templateName}
-                    </Text>
 
-                    <View style={tw`flex-row flex-wrap mt-1`}>
-                        {Array.isArray(template.modelType) ? (
-                            template.modelType.map((type, idx) => (
-                                <View
-                                    key={idx}
-                                    style={[
-                                        tw`px-2 py-1 mr-2 mb-2 rounded-full`,
-                                        { backgroundColor: theme.colors.background }
-                                    ]}
-                                >
-                                    <Text style={[tw`text-xs capitalize`, { color: theme.colors.textSecondary }]}>
-                                        {type}
-                                    </Text>
-                                </View>
-                            ))
+            {/* Header */}
+            <View style={tw`flex-row items-center justify-between mb-3`}>
+                <View style={tw`flex-row items-center`}>
+                    <View
+                        style={[tw`p-3 rounded-full w-5 h-5 mr-3 w-10 h-10`, { backgroundColor: theme.colors.primary + "20" }]}
+                    >
+                        {/* Shart (Condition) lagayi gayi hai */}
+                        {(Array.isArray(template.modelType) && template.modelType.length > 1) ? (
+                            // Agar array me 1 se zyada item hain, to ye "dusra icon" dikhega
+                            <HandFist size={16} color={theme.colors.primary} />
                         ) : (
-                            <View
-                                style={[
-                                    tw`px-2 py-1 rounded-full self-start`,
-                                    { backgroundColor: theme.colors.background }
-                                ]}
-                            >
-                                <Text style={[tw`text-xs capitalize`, { color: theme.colors.textSecondary }]}>
-                                    {template.modelType}
-                                </Text>
-                            </View>
+                            // Agar nahi, to purana code chalega jo ek icon dikhata hai
+                            (Array.isArray(template.modelType) ? template.modelType : [template.modelType]).map((type, idx) => {
+                                const Icon = modelIcons[type] || Copy;
+                                return (
+                                    <Icon key={idx} size={16} color={theme.colors.primary} />
+                                );
+                            })
                         )}
-                        <Text style={[tw`text-xs mt-1`, { color: theme.colors.textSecondary }]}>
-                            v{template.version || 1}
-                        </Text>
                     </View>
+                    <Text style={[tw`text-lg font-bold`, { color: theme.colors.text }]} numberOfLines={1}>
+                        {template.templateName}
 
+                    </Text>
                 </View>
 
-                <View style={tw`flex-row items-center -mt-1`}>
-                    <TouchableOpacity onPress={onPreview} style={tw`p-1`}>
-                        <Eye size={20} color={theme.colors.textSecondary as string} />
-                    </TouchableOpacity>
+                <View style={tw`flex-row items-center`}>
+                    {/* <TouchableOpacity onPress={onPreview} style={tw`p-1`}>
+                        <Eye size={20} color={theme.colors.textSecondary} />
+                    </TouchableOpacity> */}
                     {user?.isAdmin && (
-                        <TouchableOpacity onPress={() => setMenuVisible(true)} style={tw`p-1 ml-1 -mr-2`}>
-                            <MoreVertical size={20} color={theme.colors.textSecondary as string} />
+                        <TouchableOpacity onPress={() => setMenuVisible(true)} style={tw`p-1 ml-2`}>
+                            <MoreVertical size={20} color={theme.colors.textSecondary} />
                         </TouchableOpacity>
                     )}
                 </View>
             </View>
 
-            {/* ✅ unique keys in map */}
-            <View style={tw`flex-row flex-wrap mt-3`}>
-                {template.fields.slice(0, 5).map((field, index) => (
-                    <View key={field._id || field.fieldName || index} style={[tw`py-1 px-3 rounded-full mr-2 mb-2`, { backgroundColor: theme.colors.background }]}>
-                        <Text style={[tw`text-xs font-medium`, { color: theme.colors.textSecondary }]}>{field.label}</Text>
-                    </View>
+            {/* Model Types & Categories */}
+            <Text style={[tw`text-sm font-bold mb-1`, { color: theme.colors.text }]}>Model Types:</Text>
+            <View style={tw`flex-row flex-wrap mt-1`}>
+                {modelTypeNames.map((name, idx) => (
+                    <Badge
+                        key={`model-${idx}`}
+                        text={name}
+                        color={theme.colors.primary}
+                    />
+                ))}
+            </View>
+            <Text style={[tw`text-sm font-semibold my-1`, { color: theme.colors.text }]}>Categories:</Text>
+            <View style={tw`flex-row flex-wrap mt-1`}>
+                {categoryNames.map((name, idx) => (
+                    <Badge key={`cat-${idx}`} text={name} color={theme.colors.secondary} />
                 ))}
             </View>
 
-            {isUpdateAvailable && userCopy ? (
-                <TouchableOpacity
-                    onPress={() => onNavigateToUpdate(userCopy)}
-                    activeOpacity={0.7}
-                    style={[tw`mt-4 w-full flex-row items-center justify-center py-3 rounded-lg`, { backgroundColor: theme.colors.secondary + '20' }]}
-                >
-                    <AlertCircle size={18} color={theme.colors.secondary as string} />
-                    <Text style={[tw`font-bold ml-2`, { color: theme.colors.secondary as string }]}>Update Your Cloned Template</Text>
-                </TouchableOpacity>
-            ) : (
-                <TouchableOpacity
-                    onPress={onClone}
-                    disabled={isAlreadyCloned || isCloning}
-                    activeOpacity={0.7}
+
+            {/* Fields */}
+            <Text style={[tw`text-sm font-bold mb-1`, { color: theme.colors.text }]}>Features:</Text>
+            <View style={tw`flex-row flex-wrap mt-1`}>
+                {template.fields.slice(0, 5).map((field, index) => (
+                    <Badge
+                        key={field._id || index}
+                        text={field.label}
+                        color={theme.colors.background}
+                    />
+                ))}
+            </View>
+
+            {/* Clone / Update Button */}
+            <TouchableOpacity
+                onPress={isUpdateAvailable && userCopy ? () => onNavigateToUpdate(userCopy) : onClone}
+                disabled={isAlreadyCloned || isCloning}
+                style={[
+                    tw`mt-2 w-full flex-row items-center justify-center py-3 rounded-lg`,
+                    isAlreadyCloned
+                        ? { backgroundColor: theme.colors.secondary + "20" }
+                        : isCloning
+                            ? { backgroundColor: theme.colors.border }
+                            : { backgroundColor: theme.colors.primary },
+                ]}
+            >
+                {isCloning ? (
+                    <ActivityIndicator color={theme.colors.textSecondary} />
+                ) : isAlreadyCloned && !isUpdateAvailable ? (
+                    <CheckCircle size={18} color={theme.colors.secondary} />
+                ) : isUpdateAvailable ? (
+                    <AlertCircle size={18} color={theme.colors.secondary} />
+                ) : (
+                    <Copy size={18} color="white" />
+                )}
+                <Text
                     style={[
-                        tw`mt-4 w-full flex-row items-center justify-center py-3 rounded-lg`,
-                        isAlreadyCloned
-                            ? { backgroundColor: theme.colors.secondary + '20' }
+                        tw`ml-2 font-bold`,
+                        isAlreadyCloned || isUpdateAvailable
+                            ? { color: theme.colors.secondary }
                             : isCloning
-                                ? { backgroundColor: theme.colors.border }
-                                : { backgroundColor: theme.colors.primary as string }
+                                ? { color: theme.colors.textSecondary }
+                                : { color: "white" },
                     ]}
                 >
                     {isCloning
-                        ? <ActivityIndicator color={theme.colors.textSecondary as string} />
-                        : isAlreadyCloned
-                            ? <CheckCircle size={18} color={theme.colors.secondary as string} />
-                            : <Copy size={18} color="white" />}
-                    <Text
-                        style={[
-                            tw`font-bold ml-2`,
-                            isAlreadyCloned
-                                ? { color: theme.colors.secondary as string }
-                                : isCloning
-                                    ? { color: theme.colors.textSecondary }
-                                    : { color: 'white' }
-                        ]}
-                    >
-                        {isCloning ? 'Copying...' : isAlreadyCloned ? 'Added & Up-to-date' : cloneButtonText}
-                    </Text>
-                </TouchableOpacity>
-            )}
+                        ? "Copying..."
+                        : isUpdateAvailable
+                            ? "Update Your Cloned Template"
+                            : isAlreadyCloned
+                                ? "Added & Up-to-date"
+                                : cloneButtonText}
+                </Text>
+            </TouchableOpacity>
         </View>
     );
 };
+
 
 // --- Main View ---
 export const ChooseTemplateView: React.FC<ChooseTemplateViewProps> = ({ onClose, onGoToBlankForm, onCloneTemplate, onEditTemplate, onNavigateToUpdate }) => {
@@ -189,6 +253,7 @@ export const ChooseTemplateView: React.FC<ChooseTemplateViewProps> = ({ onClose,
     const [searchQuery, setSearchQuery] = useState('');
     const [cloningId, setCloningId] = useState<string | null>(null);
     const [previewTemplate, setPreviewTemplate] = useState<ItemTemplate | null>(null);
+    const { setTabBarVisible } = useTabBar();
 
     useEffect(() => {
         dispatch(getPublicTemplates());
@@ -211,6 +276,10 @@ export const ChooseTemplateView: React.FC<ChooseTemplateViewProps> = ({ onClose,
         );
     };
 
+    useEffect(() => {
+        setTabBarVisible(false); // page open → hide tab
+        return () => setTabBarVisible(true); // page exit → show tab again
+    }, []);
     const handleClone = async (templateId: string) => {
         setCloningId(templateId);
         await onCloneTemplate(templateId);
@@ -218,7 +287,7 @@ export const ChooseTemplateView: React.FC<ChooseTemplateViewProps> = ({ onClose,
     };
 
     return (
-        <SafeAreaView style={[tw`flex-1 mb-16`, { backgroundColor: theme.colors.background }]}>
+        <View style={[tw`flex-1 `, { backgroundColor: theme.colors.background }]}>
             <TemplatePreviewModal visible={!!previewTemplate} onClose={() => setPreviewTemplate(null)} template={previewTemplate} />
 
             {/* ✅ Header wrapped in single View */}
@@ -274,6 +343,6 @@ export const ChooseTemplateView: React.FC<ChooseTemplateViewProps> = ({ onClose,
                 }
                 ListFooterComponent={isLoading && !cloningId ? <ActivityIndicator style={tw`my-4`} /> : null}
             />
-        </SafeAreaView>
+        </View>
     );
 };

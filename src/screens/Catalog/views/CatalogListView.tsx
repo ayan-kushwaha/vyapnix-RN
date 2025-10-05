@@ -1,3 +1,4 @@
+//CatalogListView
 import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, FlatList, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -49,7 +50,7 @@ export const CatalogListView: React.FC<CatalogListViewProps> = ({
     ];
 
     return (
-        <SafeAreaView style={[tw`flex-1`, { backgroundColor: theme.colors.background }]}>
+        <View style={[tw`flex-1`, { backgroundColor: theme.colors.background }]}>
             <ActionsModal visible={isMenuVisible} onClose={() => setMenuVisible(false)} actions={menuActions} title="Catalog Options" />
             <View style={[tw`p-2 border-b`, { borderColor: theme.colors.border }]}>
                 <Text style={[tw`text-3xl font-bold`, { color: theme.colors.text }]}>{t.title}</Text>
@@ -75,6 +76,6 @@ export const CatalogListView: React.FC<CatalogListViewProps> = ({
                 contentContainerStyle={{ flexGrow: 1, paddingBottom: 80 }}
                 ListEmptyComponent={!isLoading ? (<View style={tw`flex-1 justify-center items-center`}><Text style={{ color: theme.colors.textSecondary as string }}>No templates found.</Text></View>) : null}
             />
-        </SafeAreaView>
+        </View>
     );
 };

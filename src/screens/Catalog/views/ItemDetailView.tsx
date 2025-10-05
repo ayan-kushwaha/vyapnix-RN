@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions, NativeSyntheticEvent, NativeScrollEvent, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from 'twrnc';
@@ -11,6 +11,7 @@ import { useLanguage } from '@/src/context/LanguageContext';
 import { useAppDispatch, useAppSelector } from '@/src/store/hooks';
 import { updateItem } from '@/src/store/catalogSlice';
 import { ActionsModal } from '../ActionsModal';
+import { useTabBar } from '@/src/context/TabBarContext';
 
 const { width } = Dimensions.get('window');
 
@@ -48,6 +49,7 @@ interface ItemDetailViewProps {
 export const ItemDetailView: React.FC<ItemDetailViewProps> = ({ item, template, onClose, onEdit, onDelete }) => {
     const { theme } = useTheme();
     const { locale } = useLanguage();
+    const { setTabBarVisible } = useTabBar();
     const t = (itemDetailData as any)[locale] || itemDetailData.en;
     const dispatch = useAppDispatch();
     const [activeIndex, setActiveIndex] = useState(0);
@@ -69,6 +71,10 @@ export const ItemDetailView: React.FC<ItemDetailViewProps> = ({ item, template, 
         const newStatus = !displayItem.isActive;
         dispatch(updateItem({ itemId: displayItem._id, itemData: { isActive: newStatus } }));
     };
+    useEffect(() => {
+        setTabBarVisible(false); // page open → hide tab
+        return () => setTabBarVisible(true); // page exit → show tab again
+    }, []);
 
     const menuActions = [
         { title: "Edit Item", icon: Edit, onPress: onEdit },
@@ -76,7 +82,7 @@ export const ItemDetailView: React.FC<ItemDetailViewProps> = ({ item, template, 
     ];
 
     return (
-        <SafeAreaView style={[tw`flex-1`, { backgroundColor: theme.colors.background }]}>
+        <View style={[tw`flex-1`, { backgroundColor: theme.colors.background }]}>
             <ActionsModal visible={isMenuVisible} onClose={() => setMenuVisible(false)} actions={menuActions} title={`Actions for ${displayItem.name}`} />
 
             {/* Header */}
@@ -88,7 +94,7 @@ export const ItemDetailView: React.FC<ItemDetailViewProps> = ({ item, template, 
                 </TouchableOpacity>
             </View>
 
-            <ScrollView style={tw`flex-1 mb-16`}>
+            <ScrollView style={tw`flex-1 `}>
                 {/* Image Slider */}
                 <View style={tw`h-72 bg-gray-200 dark:bg-gray-800`}>
                     <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onScroll={handleScroll} scrollEventThrottle={16}>
@@ -157,6 +163,6 @@ export const ItemDetailView: React.FC<ItemDetailViewProps> = ({ item, template, 
                     {renderCustomerField(displayItem.dynamicFields, template.fields)}
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 };

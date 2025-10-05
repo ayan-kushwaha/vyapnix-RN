@@ -30,7 +30,7 @@ export interface BusinessProfile {
   name?: string;
   description?: string;
   category?: string;
-  businessModel?: 'e-commerce' | 'booking' | 'subscription';
+  businessModel?: string;
   logoUrl?: string;
   contact?: BusinessContact;
   location?: BusinessLocation;
@@ -45,11 +45,14 @@ export interface User {
   mobileNumber: string;
   token: string;
   role?: 'user' | 'business';
+  availableRoles: string[];
   avatarUrl?: string | null;
   bio?: string;
   address?: BusinessLocation | null;
   businessProfile?: BusinessProfile | null; // Can be null
   isAdmin?: boolean;
+  employeeProfile?: any | null; // Use a more specific type if you have one
+
 }
 
 // Data for new user registration
@@ -97,7 +100,9 @@ export interface ItemTemplate {
   _id: string;
   business: string;
   templateName: string;
-  modelType: 'e-commerce' | 'booking' | 'subscription';
+  category: string | string[];
+  modelType: string | string[];
+  categories: string | string[];
   fields: {
     fieldName: string;
     label: string;

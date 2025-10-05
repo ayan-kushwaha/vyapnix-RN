@@ -14,8 +14,6 @@ import { setUserOnLoad } from '../src/store/authSlice';
 import ThemeProvider, { useTheme } from '../src/context/ThemeContext';
 import { LanguageProvider } from '../src/context/LanguageContext';
 import { RoleProvider } from '../src/context/RoleContext';
-import { SafeAreaView } from "react-native-safe-area-context";
-import { TabBarProvider } from "@/src/context/TabBarContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -85,19 +83,14 @@ function RootNavigationLayout() {
   }
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: theme.colors.background }}
-      onLayout={onLayoutRootView}
-    >
-      <TabBarProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="catalog/add-template" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-      </TabBarProvider>
-    </SafeAreaView>
+    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="catalog/add-template" options={{ presentation: 'modal' }}        />
+        <Stack.Screen name="+not-found" />
+      </Stack>
+    </View>
   );
 }
 // The RootLayout with all providers remains the same

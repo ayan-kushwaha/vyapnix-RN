@@ -16,7 +16,7 @@ import { UpdateUserData } from "../../store/types";
 // Components
 import { CustomInput, SearchableDropdown } from "../../components/forms/FormUI";
 import { UploadFile } from "../../components/upload/uploader";
-import { businessTypesData } from "../../data/businessTypesData";
+import { businessTypes } from "../../data/businessTypesData";
 
 type Locale = "en" | "hi" | "en-HI";
 
@@ -105,7 +105,7 @@ export default function EditProfileForm({ onClose }: { onClose: () => void }) {
             return newState;
         });
     };
-
+    
     // Operating hours ko open ya close karne ke liye
     const toggleDayOpen = (dayIndex: number) => {
         const updatedHours = [...formData.businessProfile.operatingHours];
@@ -124,7 +124,7 @@ export default function EditProfileForm({ onClose }: { onClose: () => void }) {
             handleInputChange("businessProfile.operatingHours", updatedHours);
         }
     };
-
+    
     // ✅ FIX: handleSave logic ab 100% sahi hai. Yeh create aur update ko theek se handle karta hai.
     const handleSave = async () => {
         if (!formData.fullName.trim() || !formData.email.trim()) {
@@ -154,7 +154,7 @@ export default function EditProfileForm({ onClose }: { onClose: () => void }) {
                         closeTime: day.isOpen ? day.closeTime : null,
                     })),
                 };
-
+                
                 // Sabse zaroori hissa: Check karein ki profile pehle se hai ya nahi
                 if (user?.businessProfile?._id) {
                     // Agar profile hai, to use UPDATE karein
@@ -200,7 +200,7 @@ export default function EditProfileForm({ onClose }: { onClose: () => void }) {
                 <CustomInput label={t.user.details.fullName} icon={User} value={formData.fullName} onChangeText={(v) => handleInputChange("fullName", v)} />
                 <CustomInput label={t.user.details.phone} icon={Phone} value={formData.mobileNumber} editable={false} />
                 <CustomInput label={t.user.details.email} icon={Mail} value={formData.email} onChangeText={(v) => handleInputChange("email", v)} />
-
+                
                 {formData.role === "user" && (
                     <CustomInput label={t.user.details.bio} icon={Info} value={formData.bio} onChangeText={(v) => handleInputChange("bio", v)} multiline />
                 )}
@@ -213,7 +213,7 @@ export default function EditProfileForm({ onClose }: { onClose: () => void }) {
                         <SearchableDropdown label={t.business.details.businessModel} data={[{ label: "E-commerce", value: "e-commerce" }, { label: "Booking", value: "booking" }]} selectedValue={formData.businessProfile.businessModel} onSelect={(item) => handleInputChange("businessProfile.businessModel", item.value)} />
                         <CustomInput label={t.business.details.phone} icon={Phone} value={formData.businessProfile.contact.phone} onChangeText={(v) => handleInputChange('businessProfile.contact.phone', v)} />
                         <CustomInput label={t.business.details.address} icon={MapPin} value={formData.businessProfile.location.address} onChangeText={(v) => handleInputChange('businessProfile.location.address', v)} />
-
+                        
                         <View style={tw`mt-6`}>
                             <Text style={[tw`text-lg font-bold mb-2`, { color: theme.colors.text }]}>{t.business.operatingHoursTitle}</Text>
                             {formData.businessProfile.operatingHours.map((day, index) => (
@@ -253,4 +253,4 @@ export default function EditProfileForm({ onClose }: { onClose: () => void }) {
     );
 }
 
-// old
+// 

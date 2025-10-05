@@ -1,3 +1,4 @@
+// 3. Actual data
 export const profileFormData = {
   en: {
     common: {
@@ -33,17 +34,36 @@ export const profileFormData = {
       city: "City",
       state: "State",
       pincode: "Pincode",
-       landmark: "Landmark / Street",
+      landmark: "Landmark / Street",
+    },
+    business: {
+      detailsTitle: "Business Details",
+      operatingHoursTitle: "Operating Hours",
+      details: {
+        category: "Category",
+        phone: "Phone",
+        email: "Email",
+        description: "Description",
+        address: "Address",
+      },
+      time: {
+        closed: "Closed",
+      },
     },
     validation: {
-        title: "Validation Error",
-        requiredFields: "Please fill all required fields.",
-        businessNameRequired: "Business name is required for a business profile.",
-        passwordRequired: "Password is required for registration.",
-        passwordMismatch: "Passwords do not match.",
-        success: "Success",
-    }
+      title: "Validation Error",
+      requiredFields: "Please fill all required fields.",
+      businessNameRequired: "Business name is required for a business profile.",
+      passwordRequired: "Password is required for registration.",
+      passwordMismatch: "Passwords do not match.",
+      success: "Success",
+    },
+    user: {
+      bioTitle: "About Me",
+      bioPlaceholder: "No bio added yet.",
+    },
   },
+
   hi: {
     common: {
       user: "यूज़र",
@@ -80,15 +100,35 @@ export const profileFormData = {
       pincode: "पिनकोड",
       landmark: "लैंडमार्क / गली",
     },
+
     validation: {
-        title: "त्रुटि",
-        requiredFields: "कृपया सभी आवश्यक फ़ील्ड भरें।",
-        businessNameRequired: "बिज़नेस प्रोफ़ाइल के लिए बिज़नेस का नाम आवश्यक है।",
-        passwordRequired: "पंजीकरण के लिए पासवर्ड आवश्यक है।",
-        passwordMismatch: "पासवर्ड मेल नहीं खाते।",
-        success: "सफलता",
-    }
+      title: "त्रुटि",
+      requiredFields: "कृपया सभी आवश्यक फ़ील्ड भरें।",
+      businessNameRequired: "बिज़नेस प्रोफ़ाइल के लिए बिज़नेस का नाम आवश्यक है।",
+      passwordRequired: "पंजीकरण के लिए पासवर्ड आवश्यक है।",
+      passwordMismatch: "पासवर्ड मेल नहीं खाते।",
+      success: "सफलता",
+    },
+    business: {
+      detailsTitle: "बिज़नेस विवरण",
+      operatingHoursTitle: "खुलने का समय",
+      details: {
+        category: "श्रेणी",
+        phone: "फ़ोन",
+        email: "ईमेल",
+        description: "विवरण",
+        address: "पता",
+      },
+      time: {
+        closed: "बंद",
+      },
+    },
+    user: {
+      bioTitle: "मेरे बारे में",
+      bioPlaceholder: "अभी तक कोई बायो नहीं जोड़ा गया।",
+    },
   },
+
   "en-HI": {
     common: {
       user: "User",
@@ -123,17 +163,33 @@ export const profileFormData = {
       city: "City",
       state: "State",
       pincode: "Pincode",
-       landmark: "Landmark / Gali", 
+      landmark: "Landmark / Gali",
     },
-     validation: {
-        title: "Error",
-        requiredFields: "Kripya sabhi zaroori fields bharein.",
-        businessNameRequired: "Business profile ke liye business ka naam zaroori hai.",
-        passwordRequired: "Registration ke liye password zaroori hai.",
-        passwordMismatch: "Passwords match nahi karte.",
-        success: "Success",
-    }
+    validation: {
+      title: "Error",
+      requiredFields: "Kripya sabhi zaroori fields bharein.",
+      businessNameRequired: "Business profile ke liye business ka naam zaroori hai.",
+      passwordRequired: "Registration ke liye password zaroori hai.",
+      passwordMismatch: "Passwords match nahi karte.",
+      success: "Success",
+    },
+    business: {
+      detailsTitle: "Business Details",
+      operatingHoursTitle: "Operating Hours",
+      details: {
+        category: "Category",
+        phone: "Phone",
+        email: "Email",
+        description: "Description",
+        address: "Address",
+      },
+      time: {
+        closed: "Closed",
+      },
+    },
+    user: {
+      bioTitle: "Mere Bare Me",
+      bioPlaceholder: "Abhi tak koi bio add nahi kiya gaya.",
+    },
   },
 };
-
-// 

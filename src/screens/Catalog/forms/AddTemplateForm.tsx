@@ -1,5 +1,5 @@
 // AddTemplateForm.tsx
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from 'twrnc';
@@ -13,8 +13,11 @@ import { addTemplateData } from '@/src/data/addTemplateData';
 import { CustomInput, SearchableDropdown } from '@/src/components/forms/FormUI';
 import { updateTemplate, createTemplate, adminUpdateTemplate } from '@/src/store/catalogSlice';
 import { defaultFields } from './defaultFields';
+import { useTabBar } from '@/src/context/TabBarContext';
+import { businessTypesData } from '@/src/data/businessTypesData';
 
 // --- Type Definitions ---
+
 interface AddTemplateFormProps {
     onClose: () => void;
     templateToEdit?: ItemTemplate | null;
@@ -34,43 +37,64 @@ export interface DynamicField {
 // Helper to generate fieldName from label
 const generateFieldName = (label: string): string => label.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
-type ModelType = 'e-commerce' | 'booking' | 'subscription';
+type ModelType = 'e-commerce' | 'booking' | 'subscription' | 'wholesale' | 'manufacturing' | 'services' | 'online' | 'agriculture';
 
 export const AddTemplateForm: React.FC<AddTemplateFormProps> = ({ onClose, templateToEdit, isAdminMode = false }) => {
     const { theme } = useTheme();
     const { locale } = useLanguage();
+    const { setTabBarVisible } = useTabBar();
     const t = (addTemplateData as any)[locale] || addTemplateData.en;
+
+    const tBT = (businessTypesData as any)[locale] || businessTypesData.en;
+
+    const dataForSections = useMemo(() => [
+        { title: "🛒 Retail & eCommerce", data: tBT.eCommerce },
+        { title: "📅 Booking Based Services", data: tBT.booking },
+        { title: "🔄 Subscription Based", data: tBT.subscription },
+        { title: "📦 Wholesale", data: tBT.wholesale },
+        { title: "🏭 Manufacturing", data: tBT.manufacturing },
+        { title: "💼 Services", data: tBT.services },
+        { title: "🌐 Online", data: tBT.online },
+        { title: "🚜 Agriculture & Farming", data: tBT.agriculture },
+    ], [tBT]);
+
     const dispatch = useAppDispatch();
     const { isLoading } = useAppSelector(s => s.catalog);
 
-    const [formData, setFormData] = useState<{ templateName: string; modelType: ModelType[]; fields: DynamicField[] }>({
+    useEffect(() => {
+        setTabBarVisible(false); // page open → hide tab
+        return () => setTabBarVisible(true); // page exit → show tab again
+    }, []);
+
+    const [formData, setFormData] = useState<{
+        templateName: string;
+        modelType: string[];
+        categories: string[]; // Nayi property: Poore selected objects ko store karne ke liye
+        fields: DynamicField[]
+    }>({
         templateName: '',
         modelType: [],
+        categories: [], // Initial state
         fields: [],
     });
-
-    // Load existing template & merge default fields
     useEffect(() => {
         if (templateToEdit) {
-            const userFields = templateToEdit.fields.filter(f => !f.isSystemField);
-            const selectedModels = Array.isArray(templateToEdit.modelType) ? templateToEdit.modelType : [templateToEdit.modelType];
-            let mergedFields: DynamicField[] = [...userFields];
-
-            selectedModels.forEach(model => {
-                (defaultFields[model] || []).forEach(f => {
-                    if (!mergedFields.find(nf => nf.fieldName === f.fieldName)) {
-                        mergedFields.push({ ...f, isSystemField: true, isExpanded: false });
-                    }
-                });
-            });
-
             setFormData({
-                templateName: templateToEdit.templateName,
-                modelType: selectedModels,
-                fields: mergedFields,
+                templateName: templateToEdit.templateName || '',
+                modelType: Array.isArray(templateToEdit.modelType)
+                    ? templateToEdit.modelType
+                    : [templateToEdit.modelType],
+                categories: (templateToEdit.categories as string[]) || [],  // optional
+                fields: templateToEdit.fields?.map(f => ({
+                    ...f,
+                    isExpanded: false,
+                    validation: f.validation || { isRequired: false },
+                    options: f.options || [], // ✅ undefined handle
+                })) || [],
             });
         }
     }, [templateToEdit]);
+
 
     // --- Field handlers ---
     const handleFieldChange = (index: number, key: keyof DynamicField, value: any) => {
@@ -102,6 +126,8 @@ export const AddTemplateForm: React.FC<AddTemplateFormProps> = ({ onClose, templ
         });
     };
 
+
+
     const handleAddOption = (fieldIndex: number) => handleFieldChange(fieldIndex, 'options', [...formData.fields[fieldIndex].options, '']);
     const handleOptionChange = (fieldIndex: number, optionIndex: number, value: string) => {
         const newOptions = [...formData.fields[fieldIndex].options];
@@ -111,23 +137,43 @@ export const AddTemplateForm: React.FC<AddTemplateFormProps> = ({ onClose, templ
     const handleRemoveOption = (fieldIndex: number, optionIndex: number) => handleFieldChange(fieldIndex, 'options', formData.fields[fieldIndex].options.filter((_, i) => i !== optionIndex));
 
     // --- Multi-model selection handler ---
-    const handleModelTypeChange = (selection: string | string[]) => {
-        const selectedModels = Array.isArray(selection) ? selection.filter(s => ['e-commerce', 'booking', 'subscription'].includes(s)) as ModelType[] : [];
+
+    const categoryToModelMap = useMemo(() => {
+        const map: { [key: string]: string } = {};
+        Object.values(tBT).forEach((categoryArray: any) => {
+            if (Array.isArray(categoryArray)) {
+                categoryArray.forEach(item => {
+                    if (item.value && item.modelType) map[item.value] = item.modelType;
+                });
+            }
+        });
+        return map;
+    }, [tBT]);
+    const handleCategoryChange = (selection: string | string[]) => {
+        const selectedValues = Array.isArray(selection) ? selection : [selection];
+        const validValues = selectedValues.filter(v => !!v);
+
+        const modelTypes = Array.from(
+            new Set(validValues.map(v => categoryToModelMap[v]).filter(Boolean))
+        );
+
         setFormData(prev => {
-            const userFields = prev.fields.filter(f => !f.isSystemField);
+            // preserve user fields that are already in prev.fields
+            let userFields = prev.fields.filter(f => !f.isSystemField);
             let mergedFields: DynamicField[] = [...userFields];
 
-            selectedModels.forEach(model => {
-                (defaultFields[model] || []).forEach(f => {
+            modelTypes.forEach(model => {
+                (defaultFields[model as ModelType] || []).forEach(f => {
                     if (!mergedFields.find(nf => nf.fieldName === f.fieldName)) {
                         mergedFields.push({ ...f, isSystemField: true, isExpanded: false });
                     }
                 });
             });
 
-            return { ...prev, modelType: selectedModels, fields: mergedFields };
+            return { ...prev, categories: validValues, modelType: modelTypes, fields: mergedFields };
         });
     };
+
 
     // --- Save template ---
     const handleSaveTemplate = async () => {
@@ -137,8 +183,9 @@ export const AddTemplateForm: React.FC<AddTemplateFormProps> = ({ onClose, templ
             modelType: formData.modelType.length === 1 ? formData.modelType[0] : formData.modelType,
             fields: formData.fields.map(f => ({
                 ...f,
-                options: (f.fieldType === 'dropdown-single' || f.fieldType === 'dropdown-multi') ? f.options.filter(opt => opt.trim() !== '') : [],
+                options: (f.fieldType === 'dropdown-single' || f.fieldType === 'dropdown-multi') ? f.options?.filter(opt => opt.trim() !== '') || [] : [],
             })),
+
         };
         try {
             if (templateToEdit) {
@@ -153,8 +200,19 @@ export const AddTemplateForm: React.FC<AddTemplateFormProps> = ({ onClose, templ
 
     const isEditMode = !!templateToEdit;
 
+    const businessModelOptions = useMemo(() =>
+        dataForSections.map(section => {
+            // Har section ke pehle item se modelType nikal lein
+            const modelType = section.data[0]?.modelType || '';
+            return {
+                label: section.title, // Jaise "🛒 Retail & eCommerce"
+                value: modelType      // Jaise "e-commerce"
+            };
+        }).filter(option => option.value) // Unhe hata dein jinka value khaali hai
+        , [dataForSections]);
+
     return (
-        <SafeAreaView style={[tw`flex-1`, { backgroundColor: theme.colors.background }]}>
+        <View style={[tw`flex-1`, { backgroundColor: theme.colors.background }]}>
             <View style={[tw`flex-row items-center p-4 border-b`, { borderColor: theme.colors.border }]}>
                 <TouchableOpacity activeOpacity={0.7} onPress={onClose} style={tw`p-2`}>
                     <ArrowLeft size={24} color={theme.colors.text as string} />
@@ -163,18 +221,41 @@ export const AddTemplateForm: React.FC<AddTemplateFormProps> = ({ onClose, templ
             </View>
             <ScrollView contentContainerStyle={tw`p-6 pb-20`} keyboardShouldPersistTaps="handled">
                 <CustomInput label={t.templateName} icon={ClipboardType} value={formData.templateName} onChangeText={v => setFormData(p => ({ ...p, templateName: v }))} />
-
                 <SearchableDropdown
-                    mode="multiple"
-                    label={t.modelType}
-                    data={[
-                        { label: 'E-commerce', value: 'e-commerce' },
-                        { label: 'Booking', value: 'booking' },
-                        { label: 'Subscription', value: 'subscription' }
-                    ]}
-                    value={formData.modelType}
-                    onSelectionChange={handleModelTypeChange}
+                    label={t.category}
+                    mode={isAdminMode ? 'multiple' : 'single'}
+                    subType={true}
+                    data={dataForSections.map(section => ({
+                        title: section.title,
+                        data: section.data.map(item => ({
+                            label: item.label,
+                            value: item.value || item.label
+                        }))
+                    }))}
+                    value={isAdminMode
+                        ? formData.categories || []
+                        : (formData.categories?.[0] || '')
+                    }
+                    onSelectionChange={(selection) => {
+                        if (isAdminMode) {
+                            handleCategoryChange(selection as string[]);
+                        } else {
+                            handleCategoryChange([selection as string]); // wrap in array for consistency
+                        }
+                    }}
                 />
+
+
+                {/* 
+                <SearchableDropdown
+                    label={t.modelType}
+                    mode="multiple"
+                    data={businessModelOptions}
+                    value={formData.modelType}
+                    onSelectionChange={() => { }}
+                    disabled={true} // readonly
+                /> */}
+
 
                 {/* Dynamic Fields */}
                 <View style={tw`mt-6`}>
@@ -240,6 +321,6 @@ export const AddTemplateForm: React.FC<AddTemplateFormProps> = ({ onClose, templ
                     {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={tw`text-white text-md font-bold text-center`}>{isEditMode ? t.updateButton : t.saveButton}</Text>}
                 </TouchableOpacity>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 };

@@ -163,6 +163,7 @@ export const SearchableDropdown: FC<DropdownProps> = ({
                                     </Text>
                                 )}
                                 stickySectionHeadersEnabled={true}
+
                             />
                         ) : (
                             <FlatList

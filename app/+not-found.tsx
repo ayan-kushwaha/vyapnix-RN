@@ -10,8 +10,8 @@ export default function NotFoundScreen() {
       <Stack.Screen options={{ title: 'Oops!' }} />
       <View style={styles.container}>
         {/* Saare content ko animate kiya */}
-        <Animated.View 
-          entering={FadeInDown.duration(500)} 
+        <Animated.View
+          entering={FadeInDown.duration(500)}
           style={styles.contentContainer}
         >
           {/* 1. Icon */}

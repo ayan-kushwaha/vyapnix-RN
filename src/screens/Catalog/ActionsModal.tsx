@@ -41,9 +41,9 @@ export const ActionsModal: React.FC<ActionsModalProps> = ({ visible, onClose, ac
             >
                 <SafeAreaView>
                     {/* Actions ki list wala container */}
-                    <View style={[tw`m-2 rounded-xl`, { backgroundColor: theme.colors.card }]}>
+                    <View style={[tw`m- rounded-t-xl `, { backgroundColor: theme.colors.card }]}>
                         {title && (
-                            <Text style={[tw`p-4 text-center text-sm font-semibold`, { color: theme.colors.textSecondary }]}>
+                            <Text style={[tw`p-4 text-center text-sm font-semibold`, { color: theme.colors.textSecondary, borderBottomWidth: 1, borderColor: theme.colors.border }]}>
                                 {title}
                             </Text>
                         )}
@@ -57,7 +57,7 @@ export const ActionsModal: React.FC<ActionsModalProps> = ({ visible, onClose, ac
                                 style={[
                                     tw`flex-row items-center p-4`,
                                     // Pehle item ke alawa sabke upar border line
-                                    { borderTopWidth: index > 0 || title ? 1 : 0, borderColor: theme.colors.border }
+                                    { borderBottomWidth: index > 0 || title ? 1 : 0, borderColor: theme.colors.border }
                                 ]}
                             >
                                 <action.icon
@@ -77,7 +77,7 @@ export const ActionsModal: React.FC<ActionsModalProps> = ({ visible, onClose, ac
                     </View>
 
                     {/* Cancel button wala container */}
-                    <View style={[tw`m-2 mt-0 rounded-xl`, { backgroundColor: theme.colors.card }]}>
+                    <View style={[tw`m- mt-0 `, { backgroundColor: theme.colors.card }]}>
                         <TouchableOpacity onPress={onClose} style={tw`p-4 items-center`}>
                             <Text style={[tw`text-lg font-bold`, { color: theme.colors.primary as string }]}>
                                 Cancel

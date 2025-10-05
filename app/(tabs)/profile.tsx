@@ -1,75 +1,121 @@
 // app/(profile)/index.tsx
 
-import React, { useState } from "react"; // Removed useContext
-import { ScrollView, View, Text, TouchableOpacity, SafeAreaView } from "react-native";
+import React, { useState } from "react";
+// ✅ Alert ko import karein
+import { ScrollView, View, Text, TouchableOpacity, SafeAreaView, Share, Alert } from "react-native";
 import tw from "twrnc";
-import { ArrowLeft, Settings } from "lucide-react-native";
+// ✅ Naye icons import karein
+import { ArrowLeft, MoreVertical, Settings, Edit, Share2, LogOut } from "lucide-react-native";
 
 import { useTheme } from "../../src/context/ThemeContext";
-// ❌ No need for RoleContext anymore
-// import { RoleContext } from "../../src/context/RoleContext";
+// ✅ Redux hooks aur actions import karein
+import { useAppSelector, useAppDispatch } from "../../src/store/hooks";
+import { logoutUser } from "../../src/store/authSlice";
 
-// ✅ Import Redux hooks instead
-import { useAppSelector } from "../../src/store/hooks";
-
-// Screens
+// Screens & Components
 import AppSettingsScreen from "../../src/screens/Profile/AppSettingsScreen";
 import UserProfilePage from "../../src/screens/Profile/UserProfilePage";
-// import EditProfileForm from "../../src/screens/Profile/EditProfileForm";
 import ProfileForm from "../../src/components/forms/ProfileForm";
+import { ActionsModal } from "@/src/screens/Catalog/ActionsModal";
 
 export default function Profile() {
   const { theme } = useTheme();
   const { user } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch(); // ✅ dispatch ko initialize karein
 
-  const role = user?.businessProfile ? 'Business' : 'User';
-  const [isEditing, setIsEditing] = useState(false);
-
-  const toggleEditMode = () => setIsEditing(prev => !prev);
+  const [viewMode, setViewMode] = useState<'profile' | 'edit' | 'settings'>('profile');
+  const [isMenuVisible, setMenuVisible] = useState(false);
 
   if (!user) return null;
 
-  const handleFormClose = () => {
-    // ✅ Sirf edit mode ko false karo
-    setIsEditing(false);
+  const role = user?.businessProfile ? 'Business' : 'User';
+
+  // ✅ Logout ke liye confirmation wala function
+  const handleLogout = () => {
+    Alert.alert(
+      "Confirm Logout",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: () => dispatch(logoutUser())
+        },
+      ]
+    );
   };
 
+  const menuActions = [
+    {
+      title: "Share Profile",
+      icon: Share2,
+      onPress: () => {
+        Share.share({ message: `Check out my profile: ${user.fullName}!` });
+      }
+    },
+    {
+      title: "Edit Profile",
+      icon: Edit,
+      onPress: () => setViewMode('edit')
+    },
+    {
+      title: "Settings",
+      icon: Settings,
+      onPress: () => setViewMode('settings')
+    },
+    // ✅ Logout ka naya action yahan add karein
+    {
+      title: "Logout",
+      icon: LogOut,
+      onPress: handleLogout
+    },
+  ];
+
   return (
-    <SafeAreaView style={[tw`flex-1`, { backgroundColor: theme.colors.background }]}>
-      {/* Header */}
-      <View style={tw`flex-row items-center justify-between px-4 h-16`}>
+    <View style={[tw`flex-1`, { backgroundColor: theme.colors.background }]}>
+      {/* Dynamic Header */}
+      <View style={[tw`flex-row items-center justify-between px-4 h-16 border-b `, { borderColor: theme.colors.border }]}>
         <View style={tw`flex-row items-center`}>
-          {isEditing && (
-            <TouchableOpacity onPress={handleFormClose} style={tw`mr-3`}>
+          {viewMode !== 'profile' && (
+            <TouchableOpacity onPress={() => setViewMode('profile')} style={tw`mr-4 p-2 -ml-2`}>
               <ArrowLeft size={24} color={theme.colors.text} />
             </TouchableOpacity>
           )}
-          <Text style={[tw`text-lg font-bold`, { color: theme.colors.text }]}>
-            {role} Profile
+          <Text style={[tw`text-xl font-bold`, { color: theme.colors.text }]}>
+            {viewMode === 'profile' && `${role} Profile`}
+            {viewMode === 'edit' && `Edit Profile`}
+            {viewMode === 'settings' && `Settings`}
           </Text>
         </View>
-        {!isEditing && (
-          <TouchableOpacity>
-            <Settings size={22} color={theme.colors.iconColor} />
+
+        {viewMode === 'profile' && (
+          <TouchableOpacity onPress={() => setMenuVisible(true)}>
+            <MoreVertical size={24} color={theme.colors.textSecondary} />
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Content */}
+      {/* Dynamic Content */}
       <ScrollView showsVerticalScrollIndicator={false}>
-        {isEditing ? (
-          <ProfileForm
-            mode="edit"
-            onSuccess={handleFormClose} // ✅ Sirf form band karega
-            onClose={handleFormClose}   // ✅ Back button ke liye
-          />
-        ) : (
-          <>
-            <UserProfilePage onEditProfilePress={toggleEditMode} />
-            <AppSettingsScreen />
-          </>
+        {viewMode === 'edit' && (
+          <ProfileForm mode="edit" onSuccess={() => setViewMode('profile')} onClose={() => setViewMode('profile')} />
+        )}
+        {viewMode === 'profile' && (
+          <UserProfilePage onEditProfilePress={() => setViewMode('edit')} />
+        )}
+        {viewMode === 'settings' && (
+          <AppSettingsScreen />
         )}
       </ScrollView>
-    </SafeAreaView>
+
+      {/* ActionsModal */}
+      <ActionsModal
+        visible={isMenuVisible}
+        onClose={() => setMenuVisible(false)}
+        title="Profile Options"
+        actions={menuActions}
+      />
+    </View>
   );
 }

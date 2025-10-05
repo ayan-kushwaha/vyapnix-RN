@@ -28,59 +28,64 @@ export default function LoginScreen() {
         (state: RootState) => state.auth
     );
 
-    useEffect(() => {
-        // Agar API se error aaye, toh alert dikhayein aur state reset karein
-        if (isError && message) {
-            // Message string hai ya nahi, yeh check karein
-            const errorMessage = typeof message === 'string' ? message : 'An unknown error occurred';
-            Alert.alert('Login Failed', errorMessage);
-            dispatch(reset()); // Reset karna zaroori hai taaki error baar baar na dikhe
-        }
+    // useEffect(() => {
+    //     // Agar API se error aaye, toh alert dikhayein aur state reset karein
+    //     if (isError && message) {
+    //         // Message string hai ya nahi, yeh check karein
+    //         const errorMessage = typeof message === 'string' ? message : 'An unknown error occurred';
+    //         Alert.alert('Login Failed', errorMessage);
+    //         dispatch(reset()); // Reset karna zaroori hai taaki error baar baar na dikhe
+    //     }
 
-        // Agar success ho jaaye, toh bhi state ko reset karein
-        // Navigation ka kaam RootLayoutNav component dekh lega
-        if (isSuccess || user) {
-            dispatch(reset());
-        }
-    }, [isError, isSuccess, user, message, dispatch]);
+    //     // Agar success ho jaaye, toh bhi state ko reset karein
+    //     // Navigation ka kaam RootLayoutNav component dekh lega
+    //     if (isSuccess || user) {
+    //         dispatch(reset());
+    //     }
+    // }, [isError, isSuccess, user, message, dispatch]);
 
-    const handleLogin = () => {
-        if (!mobileNumber || !password) {
-            Alert.alert('Error', 'Please enter mobile number and password.');
-            return;
-        }
-        // Login action ko dispatch karein
-        dispatch(loginUser({ mobileNumber, password }));
-    };
-    LoginScreen.tsx
-
-    // ...
-    // const handleLogin = async () => { // ✨ Ise async banayein
+    // const handleLogin = () => {
     //     if (!mobileNumber || !password) {
     //         Alert.alert('Error', 'Please enter mobile number and password.');
     //         return;
     //     }
-
-    //     try {
-    //         // Login action ko dispatch karein aur result ka intezar karein
-    //         await dispatch(loginUser({ mobileNumber, password })).unwrap();
-
-    //         // Agar login safal hota hai, to navigation apne aap _layout.tsx se ho jayega.
-    //         // Yahan kuch karne ki zaroorat nahi hai.
-    //         // dispatch(reset()) yahan call karne ki zaroorat nahi kyunki hum navigate kar rahe hain.
-
-    //     } catch (error: any) {
-    //         // Agar login fail hota hai, to error ko yahan pakdein
-    //         const errorMessage = typeof error.message === 'string' ? error.message : 'Invalid credentials';
-    //         Alert.alert('Login Failed', errorMessage);
-    //         // Fail hone par state ko reset karein
-    //         //   dispatch(reset());
-    //     }
+    //     // Login action ko dispatch karein
+    //     dispatch(loginUser({ mobileNumber, password }));
     // };
+
+    // LoginScreen.tsx
+
+    // ...
+    const handleLogin = async () => { // ✨ Ise async banayein
+        if (!mobileNumber || !password) {
+            Alert.alert('Error', 'Please enter mobile number and password.');
+            return;
+        }
+
+        try {
+            // Login action ko dispatch karein aur result ka intezar karein
+            await dispatch(loginUser({ mobileNumber, password })).unwrap();
+
+            const resultAction = await dispatch(loginUser(loginData)).unwrap();
+
+            const availableRoles = resultAction.availableRoles || [];
+
+            // Agar login safal hota hai, to navigation apne aap _layout.tsx se ho jayega.
+            // Yahan kuch karne ki zaroorat nahi hai.
+            // dispatch(reset()) yahan call karne ki zaroorat nahi kyunki hum navigate kar rahe hain.
+
+        } catch (error: any) {
+            // Agar login fail hota hai, to error ko yahan pakdein
+            const errorMessage = typeof error.message === 'string' ? error.message : 'Invalid credentials';
+            Alert.alert('Login Failed', errorMessage);
+            // Fail hone par state ko reset karein
+            //   dispatch(reset());
+        }
+    };
     // ...
 
     return (
-        <SafeAreaView style={[tw`flex-1`, { backgroundColor: theme.colors.background }]}>
+        <View style={[tw`flex-1`, { backgroundColor: theme.colors.background }]}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={tw`flex-1`}
@@ -125,7 +130,7 @@ export default function LoginScreen() {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </View>
     );
 }
 // old is

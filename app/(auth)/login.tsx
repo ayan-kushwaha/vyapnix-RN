@@ -1,87 +1,68 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+// app/(auth)/login.tsx
+
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Phone, KeyRound } from 'lucide-react-native';
 import tw from 'twrnc';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 
-// ✅ FIX 1: Apne custom typed hooks ko import karein
-import { useAppDispatch, useAppSelector } from '../../src/store/hooks';
-import { loginUser, reset } from '../../src/store/authSlice';
+import { useAppDispatch } from '../../src/store/hooks';
+import { loginUser } from '../../src/store/authSlice';
 import { useTheme } from '../../src/context/ThemeContext';
+import { useRole } from '../../src/context/RoleContext'; // ✅ RoleContext ko import karein
 import { CustomInput } from '../../src/components/forms/FormUI';
-import { RootState } from '../../src/store/store'; // RootState ko import karein (good practice)
 
 export default function LoginScreen() {
     const router = useRouter();
     const { theme } = useTheme();
-
-    // ✅ FIX 2: useDispatch ki jagah useAppDispatch ka istemal karein
     const dispatch = useAppDispatch();
+    const { changeRole } = useRole(); // ✅ RoleContext se changeRole function lein
 
     const [mobileNumber, setMobileNumber] = useState('');
     const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false); // Local loading state for the button
 
-    // ✅ FIX 3: useSelector ki jagah useAppSelector ka istemal karein
-    // Ab 'state' ka type 'RootState' hai, 'unknown' nahi.
-    const { user, isLoading, isError, isSuccess, message } = useAppSelector(
-        (state: RootState) => state.auth
-    );
-
-    // useEffect(() => {
-    //     // Agar API se error aaye, toh alert dikhayein aur state reset karein
-    //     if (isError && message) {
-    //         // Message string hai ya nahi, yeh check karein
-    //         const errorMessage = typeof message === 'string' ? message : 'An unknown error occurred';
-    //         Alert.alert('Login Failed', errorMessage);
-    //         dispatch(reset()); // Reset karna zaroori hai taaki error baar baar na dikhe
-    //     }
-
-    //     // Agar success ho jaaye, toh bhi state ko reset karein
-    //     // Navigation ka kaam RootLayoutNav component dekh lega
-    //     if (isSuccess || user) {
-    //         dispatch(reset());
-    //     }
-    // }, [isError, isSuccess, user, message, dispatch]);
-
-    // const handleLogin = () => {
-    //     if (!mobileNumber || !password) {
-    //         Alert.alert('Error', 'Please enter mobile number and password.');
-    //         return;
-    //     }
-    //     // Login action ko dispatch karein
-    //     dispatch(loginUser({ mobileNumber, password }));
-    // };
-
-    // LoginScreen.tsx
-
-    // ...
-    const handleLogin = async () => { // ✨ Ise async banayein
+    const handleLogin = async () => {
         if (!mobileNumber || !password) {
             Alert.alert('Error', 'Please enter mobile number and password.');
             return;
         }
 
-        try {
-            // Login action ko dispatch karein aur result ka intezar karein
-            await dispatch(loginUser({ mobileNumber, password })).unwrap();
+        setIsLoading(true); // Loader shuru karein
 
-            // Agar login safal hota hai, to navigation apne aap _layout.tsx se ho jayega.
-            // Yahan kuch karne ki zaroorat nahi hai.
-            // dispatch(reset()) yahan call karne ki zaroorat nahi kyunki hum navigate kar rahe hain.
+        try {
+            const loginData = { mobileNumber, password };
+            
+            // ✅ loginUser ko sirf ek baar call karein
+            const resultAction = await dispatch(loginUser(loginData)).unwrap();
+
+            // ✅ Login safal hone par shuruaati role tay karein
+            const availableRoles = resultAction.availableRoles || [];
+            
+            let initialRole = 'user'; // Default role
+            if (availableRoles.includes('business')) {
+                initialRole = 'business'; // Priority 1: Business
+            } else if (availableRoles.includes('employee')) {
+                initialRole = 'employee'; // Priority 2: Employee
+            }
+
+            // ✅ RoleContext mein shuruaati role set karein
+            changeRole(initialRole);
+            
+            // Navigation apne aap _layout.tsx se handle ho jayega
+            // Yahan `router.replace` ki zaroorat nahi hai agar aapka RootLayout sahi se set hai.
 
         } catch (error: any) {
-            // Agar login fail hota hai, to error ko yahan pakdein
-            const errorMessage = typeof error.message === 'string' ? error.message : 'Invalid credentials';
+            const errorMessage = error.message || 'Invalid credentials';
             Alert.alert('Login Failed', errorMessage);
-            // Fail hone par state ko reset karein
-            //   dispatch(reset());
+        } finally {
+            setIsLoading(false); // Loader band karein
         }
     };
-    // ...
 
     return (
-        <SafeAreaView style={[tw`flex-1`, { backgroundColor: theme.colors.background }]}>
+        <View style={[tw`flex-1`, { backgroundColor: theme.colors.background }]}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={tw`flex-1`}
@@ -117,16 +98,15 @@ export default function LoginScreen() {
                             <Text style={[tw`text-base font-bold`, { color: theme.colors.primary }]}>Register</Text>
                         </TouchableOpacity>
                     </View>
-                    <View style={tw`flex-row justify-center mt-8`}>
+                     <View style={tw`flex-row justify-center mt-4`}>
                         <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')}>
-                            <Text style={[tw`text-sm mb-4`, { color: theme.colors.primary, textAlign: 'right' }]}>
+                            <Text style={[tw`text-sm`, { color: theme.colors.primary, textAlign: 'right' }]}>
                                 Forgot Password?
                             </Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </View>
     );
 }
-// old is

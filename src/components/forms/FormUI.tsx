@@ -14,6 +14,7 @@ interface CustomInputProps extends TextInputProps {
     icon: LucideIcon;
     label?: string;
     isPassword?: boolean;
+    renderRightIcon?: () => JSX.Element;
 }
 
 interface CustomTextAreaProps extends TextInputProps {
@@ -22,7 +23,7 @@ interface CustomTextAreaProps extends TextInputProps {
 }
 
 // --- 1. Text, Email, Password ke liye Reusable Input ---
-export const CustomInput: FC<CustomInputProps> = ({ icon: Icon, label, multiline, isPassword = false, ...props }) => {
+export const CustomInput: FC<CustomInputProps> = ({ icon: Icon, label, multiline, renderRightIcon, isPassword = false, ...props }) => {
     const { theme } = useTheme();
     const [isFocused, setIsFocused] = useState(false);
     const [secureText, setSecureText] = useState(isPassword);
@@ -33,11 +34,11 @@ export const CustomInput: FC<CustomInputProps> = ({ icon: Icon, label, multiline
     return (
         <View style={tw`mb-4`}>
             {label && <Text style={[tw`text-sm font-medium mb-2`, { color: theme.colors.textSecondary }]}>{label}</Text>}
-            <View style={[tw`flex-row items-center p-3 rounded-xl border-2`, { backgroundColor: theme.colors.card, borderColor }, multiline ? tw`h-30 items-start` : tw`h-14`]}>
+            <View style={[tw`flex-row items-center p-3 rounded-xl border-2`, { backgroundColor: theme.colors.card, borderColor }, multiline ? tw`h-40 items-start` : tw`h-14`]}>
                 <Icon color={isFocused ? theme.colors.primary : theme.colors.textSecondary} size={20} />
                 <TextInput
                     style={[
-                        tw`flex-1 ml-3 text-base h-full min-h-10`, // Base height for single line
+                        tw`flex-1 ml-3 text-base h-full min-h-10 ${multiline ? '-mt-3 min-h-40' : ''}`, // Base height for single line
                         { color: theme.colors.text },
                         multiline && { textAlignVertical: 'top' } // This is the key for textarea behavior
                     ]}
@@ -53,6 +54,9 @@ export const CustomInput: FC<CustomInputProps> = ({ icon: Icon, label, multiline
                     <TouchableOpacity onPress={() => setSecureText(!secureText)}>
                         {secureText ? <EyeOff color={theme.colors.textSecondary} size={20} /> : <Eye color={theme.colors.textSecondary} size={20} />}
                     </TouchableOpacity>
+                )}
+                {renderRightIcon && (
+                    <View style={tw`pl-2`}>{renderRightIcon()}</View>
                 )}
             </View>
         </View>
